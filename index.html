@@ -117,6 +117,28 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
 .loader-bar{width:72%; max-width:340px; height:16px; border:2px solid #c9a227; border-radius:10px; padding:2px; box-shadow:0 0 14px rgba(255,183,0,0.4);}
 .loader-fill{height:100%; width:0%; border-radius:7px; background:linear-gradient(90deg,#ffb300,#ff8a00); transition:width 0.2s linear;}
 .loader-text{color:#c9a227; font-size:1.2rem; font-weight:700; letter-spacing:2px; text-shadow:0 0 12px rgba(255,183,0,0.6); font-family:Georgia,'Times New Roman',serif;}
+/* === Главная «Мой герой»: Мощь и прогресс === */
+.power-hero{background:linear-gradient(135deg,rgba(40,28,80,0.85),rgba(15,10,35,0.95)); border:1px solid rgba(255,183,0,0.35); border-radius:14px; padding:14px; margin-bottom:12px; position:relative; overflow:hidden;}
+.power-hero .ph-quote{font-size:0.9rem; opacity:0.9; margin-bottom:10px; line-height:1.35; color:#ffd9b0;}
+.power-fig{display:flex; gap:14px; align-items:center;}
+.power-fig .fig-slot{flex-shrink:0;}
+.power-fig .fig-slot img, .power-fig .fig-slot svg{width:120px; height:150px; display:block;}
+.ph-side{display:flex; flex-direction:column; gap:8px; flex:1;}
+.ph-gifts{display:flex; gap:8px;}
+.ph-gift{flex:1; background:rgba(0,0,0,0.4); border:1px solid rgba(255,183,0,0.4); border-radius:10px; padding:8px; text-align:center;}
+.ph-gift b{display:block; color:#ffd54f; font-size:0.82rem;}
+.ph-gift small{color:var(--t); font-size:0.72rem;}
+.ph-progress{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.ph-prog-item{background:rgba(0,0,0,0.4); border:1px solid rgba(255,183,0,0.35); border-radius:10px; padding:8px;}
+.ph-prog-item b{display:block; color:#fff; font-size:0.8rem;}
+.ph-prog-item small{color:#ffd54f; font-size:0.78rem;}
+.power-total{text-align:center; margin-top:12px; font-size:1.25rem; font-weight:800; color:#ffd54f; text-shadow:0 0 14px rgba(255,183,0,0.6);}
+.power-total small{display:block; font-size:0.8rem; color:var(--t); font-weight:600; letter-spacing:1px;}
+/* нижняя навигация на 5 кнопок */
+.bottom-nav5{display:flex; justify-content:space-around; align-items:center; background:linear-gradient(135deg,rgba(40,28,80,0.95),rgba(15,10,35,0.98)); border:1px solid rgba(255,183,0,0.3); border-radius:14px; padding:10px 4px; margin-top:6px;}
+.bottom-nav5 button{background:transparent; border:none; color:var(--s); font-size:1.5rem; cursor:pointer; padding:6px 12px; border-radius:10px; transition:all .15s; display:flex; flex-direction:column; align-items:center; gap:2px;}
+.bottom-nav5 button small{font-size:0.6rem; color:var(--t); font-weight:600;}
+.bottom-nav5 button:hover{background:rgba(255,183,0,0.15); transform:translateY(-2px);}
 </style>
 </head>
 <body>
@@ -203,6 +225,25 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
       <h3 style="margin:4px 0 0 0;" id="welcome-name">Герой</h3>
       <div style="font-size:0.9rem; opacity:0.9;" id="welcome-line">Уровень 1</div>
       <div style="font-size:0.85rem; opacity:0.75; font-style:italic; margin-top:4px;" id="welcome-motto"></div>
+    </div>
+    <div class="power-hero">
+      <div class="ph-quote" id="power-quote">У тебя отличное снаряжение! Мир титанов огромен — исследуй его, и о тебе будут слагать легенды!</div>
+      <div class="power-fig">
+        <div class="fig-slot" id="power-figure"></div>
+        <div class="ph-side">
+          <div class="ph-gifts">
+            <div class="ph-gift"><b>🎁 Подарок: +5000 золота</b><small id="gift-timer">1 день</small></div>
+            <div class="ph-gift"><b>💍 Кольца −50%</b><small id="sale-timer">2 часа</small></div>
+          </div>
+          <div class="ph-progress">
+            <div class="ph-prog-item"><b>🏆 Трофей титана</b><small id="prog-trophy">0 из 3</small></div>
+            <div class="ph-prog-item"><b>🗡 Достижения титана</b><small id="prog-achiev">0 из 29</small></div>
+            <div class="ph-prog-item"><b>🏛 Зал славы</b><small id="prog-hall">0 из 8</small></div>
+            <div class="ph-prog-item"><b>📜 Задания мудреца</b><small id="prog-sage">0 из 0</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="power-total"><small>МОЩЬ</small><span id="power-total">0</span></div>
     </div>
     <div class="hero-panel">
       <div class="hero-top">
@@ -1149,14 +1190,34 @@ function renderHeroPanel() {
   if (pf) pf.innerHTML = renderPetSVG();
   setText('hero-pet-name', '🐾 ' + state.pet);
   setText('hero-pet-line', 'Уровень ' + state.petLvl);
-  // Нижняя навигация
+  // Блок «Мощь» на главной
+  const pfig = document.getElementById('power-figure');
+  if (pfig) {
+    const best2 = bestOwnedRarity();
+    const a2 = best2 ? RARITY_COLORS[best2.rarity] : RARITY_COLORS.occupy;
+    pfig.innerHTML = '<div style="transform:scale(0.55); transform-origin:top left; width:220px; margin:0 -50px 0 -50px;">' + renderFighterSVG({ fill: a2[0], dark: a2[1] }) + '</div>';
+  }
+  const power = (state.str || 0) + (state.hp || 0) + (state.dmg || 0) * 8 + (state.armor || 0) * 5;
+  setText('power-total', power.toLocaleString('ru-RU'));
+  const trophy = (state.titans.beaten || []).length;
+  setText('prog-trophy', trophy + ' из 3');
+  const relics = (state.titans.relics || []).length;
+  setText('prog-achiev', relics + ' из 29');
+  setText('prog-hall', state.arenaWins != null ? state.arenaWins + ' из 8' : '0 из 8');
+  setText('prog-sage', '0 из 0');
+  // Таймеры-подарки (статичные как в макете)
+  setText('gift-timer', '1 день');
+  setText('sale-timer', '2 часа');
+  // Нижняя навигация (5 иконок)
   const nav = document.getElementById('bottom-nav');
   if (nav) {
+    nav.className = 'bottom-nav5';
     nav.innerHTML =
-      '<button title="Дом" onclick="switchTab(\'titans\')">🏠</button>' +
-      '<button title="Профиль" onclick="switchTab(\'hero\')">👤</button>' +
-      '<button title="Магазин" onclick="switchTab(\'shop\')">🪙</button>' +
-      '<button title="Меню" onclick="switchTab(\'titans\')">☰</button>';
+      '<button onclick="switchTab(\'hero\')"><span>🏠</span><small>Дом</small></button>' +
+      '<button onclick="switchTab(\'hero\')"><span>👤</span><small>Профиль</small></button>' +
+      '<button onclick="switchTab(\'shop\')"><span>🪙</span><small>Ресурсы</small></button>' +
+      '<button onclick="switchTab(\'titans\')"><span>☰</span><small>Меню</small></button>' +
+      '<button onclick="location.reload()"><span>🔄</span><small>Обновить</small></button>';
   }
 }
 
@@ -1668,19 +1729,23 @@ function renderTitansMenu() {
   const el = document.getElementById('titans-menu');
   if (!el) return;
   const items = [
+    ['Битва с боссом', '🪖', 'switchTab(\'boss\')', 'Вещи из босса • 🔒 на 5 ур'],
+    ['Поход', '⚔️', 'renderTitansGo()', 'Сразиться с титанами и добыть реликвии'],
+    ['Пещера', '⛏️', 'switchTab(\'cave\')', 'Добыча ресурсов для заточки'],
+    ['Хижина мудреца', '🔮', 'titanSage()', 'Трофеи, коллекции, задания'],
+    ['Кузница', '🔨', 'titanForge()', 'Руны, заточка, бонус, заговор'],
+    ['Лаборатория', '🧪', 'titanLab()', 'Усиления, эликсиры, камень и трава'],
+    ['Получить золото', '💰', 'titanGetGold()', 'Обмен и покупка'],
+    ['Сражения', '🤺', 'titanPlaceholder(\'Сражения\')', 'Доступно с ⬆ 5 уровня'],
+    ['Колизей', '🏟️', 'titanPlaceholder(\'Колизей\')', 'Доступно с ⬆ 5 уровня'],
     ['Арена', '⚔️', 'titanArena()', 'Победите всех соперников и станьте чемпионом'],
     ['Дуэли', '🗡️', 'titanDuel()', 'Быстрый бой 1 на 1 против NPC'],
-    ['Пещера', '⛏️', 'switchTab(\'cave\')', 'Добыча ресурсов и руды'],
-    ['Хижина мудреца', '🔮', 'titanSage()', 'Советы мудреца и пророчества'],
+    ['Лига новичков', '🎖️', 'titanPlaceholder(\'Лига новичков\')', 'Соревнование для начинающих'],
+    ['Коллекции снаряжения', '🗂️', 'titanPlaceholder(\'Коллекции снаряжения\')', 'Собирайте наборы брони'],
     ['Долина бессмертных', '🏔️', 'titanValley()', '<9 часов до открытия'],
-    ['Сражения', '🤺', 'titanPlaceholder(\'Сражения\')', 'Будущий режим сражений'],
-    ['Колизей', '🏟️', 'titanPlaceholder(\'Колизей\')', 'Арена для дуэлей'],
-    ['Поход', '⚔️', 'renderTitansGo()', 'Сразиться с титанами и добыть реликвии'],
-    ['Получить золото', '💰', 'titanGetGold()', 'Бесплатное золото, раз в 5 мин'],
-    ['Магазин снаряжения', '🛒', 'switchTab(\'shop\')', 'Купить лучшую броню'],
-    ['Кузница', '🔨', 'titanForge()', 'Руны, заточка, звёзды, бонус'],
-    ['Лаборатория', '🧪', 'titanLab()', 'Усиления, эликсиры, камни и травы'],
     ['Рейтинг', '🏆', 'loadLeaderboard()', 'Таблица лидеров'],
+    ['Лучшие личные рекорды', '📊', 'titanPlaceholder(\'Лучшие личные рекорды\')', 'Ваши лучшие достижения'],
+    ['Лучшие рекорды кланов', '🛡️', 'titanPlaceholder(\'Лучшие рекорды кланов\')', 'Достижения вашего клана'],
     ['Мой герой', '🛡️', 'switchTab(\'hero\')', 'Профиль и броня'],
     ['Мой клан', '🏅', 'switchTab(\'leaders\')', 'Ваш клан'],
     ['На главную', '🏠', 'switchTab(\'hero\')', 'Вернуться в игру']
