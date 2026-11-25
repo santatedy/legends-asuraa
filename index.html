@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Легенды Асура 2.0</title>
+<style>
+:root{--p: #4a2d7d; --s: #f5e6c8; --g: #2e7d32; --r: #c62828; --b: #1a237e; --y: #ffd600;}
+body{margin:0; font-family: system-ui, Roboto, Arial, sans-serif; background: radial-gradient(circle at top, #1a1a2e, #0f0c29); color: var(--s); overflow-x: hidden;}
+.container{max-width: 900px; margin: 0 auto; padding: 10px;}
+.card{background: rgba(26, 35, 126, 0.85); border: 1px solid var(--p); border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);}
+.card h3{margin-top:0; color:#fff; text-shadow:0 0 6px rgba(74,45,125,0.6);}
+.header{display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid var(--p); padding-bottom: 8px;}
+.stat-row{display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;}
+.stat{background: rgba(255,255,255,0.1); padding: 6px 10px; border-radius: 6px; font-size: 0.9rem;}
+.btn{background: var(--g); color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s;}
+.btn:hover{background: #1b5e20; transform: translateY(-1px);}
+.btn-danger{background: var(--r);}
+.btn-danger:hover{background: #b71c1c;}
+.btn-primary{background: var(--p);}
+.btn-primary:hover{background: #311b92;}
+.grid-3{display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;}
+.log{background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; max-height: 200px; overflow-y: auto; margin-top: 8px; border: 1px solid #333;}
+.resource{display: inline-flex; align-items: center; gap: 6px; margin-right: 12px;}
+.tab-buttons{display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;}
+.tab-btn{background: rgba(255,255,255,0.08); color: var(--s); border: 1px solid rgba(255,255,255,0.18); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: all 0.2s; letter-spacing: 0.3px;}
+.tab-btn:hover{background: rgba(255,255,255,0.16); transform: translateY(-1px);}
+.tab-btn.active{background: linear-gradient(135deg, var(--p), #7b4dd3); border-color: var(--p); color: #fff; box-shadow: 0 2px 10px rgba(74,45,125,0.5);}
+.shield{display:inline-block; margin-right:6px;}
+.pass-panel{background: rgba(74,45,125,0.35); border: 1px solid var(--p); border-radius: 12px; padding: 12px; margin-bottom: 12px;}
+.pass-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.form-group{margin-bottom: 10px;}
+label{display: block; margin-bottom: 4px; font-weight: 700;}
+input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: rgba(255,255,255,0.1); color: #fff;}
+.craft-grid{display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;}
+.talent-tree{display: flex; flex-wrap: wrap; gap: 10px;}
+.talent{background: rgba(255,214,0,0.15); padding: 8px; border-radius: 6px; border: 1px solid var(--y); cursor: pointer;}
+.talent.unlocked{background: rgba(255,214,0,0.4); border-color: var(--y);}
+@media (max-width: 500px){.grid-3{grid-template-columns: 1fr;}.header{flex-direction: column; gap: 8px;}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2>Легенды Асура 2.0</h2>
+    <span id="player-badge" style="font-weight:700; color:#ffd600;"></span>
+    <div>
+      <span class="resource"><span>💰 Золото:</span> <span id="gold-val">0</span></span>
+      <span class="resource"><span>🪙 Серебро:</span> <span id="silver-val">0</span></span>
+      <span class="resource"><span>💎 Кристаллы:</span> <span id="crystal-val">0</span></span>
+    </div>
+  </div>
+
+  <div class="pass-panel">
+    <strong>👤 Аккаунт <span id="online-status" style="font-size:0.8rem; font-weight:600;"></span></strong>
+    <p style="margin:6px 0; font-size:0.85rem; opacity:0.8;">Войдите или зарегистрируйтесь, чтобы играть онлайн и видеть других игроков.</p>
+    <div id="account-in">
+      <div class="pass-row">
+        <input type="text" id="acc-nick" placeholder="Никнейм (на англ.)" style="flex:1; min-width:140px;">
+        <input type="password" id="acc-pass" placeholder="Пароль" style="flex:1; min-width:140px;">
+        <button class="btn btn-primary" onclick="accountRegister()">Регистрация</button>
+        <button class="btn" onclick="accountLogin()">Вход</button>
+      </div>
+      <p id="pass-status" style="font-size:0.85rem; margin-top:6px;"></p>
+    </div>
+    <div id="account-out" style="display:none;">
+      <p id="account-info" style="font-size:0.9rem; margin:0 0 6px 0;"></p>
+      <button class="btn btn-danger" onclick="accountLogout()">Выйти</button>
+      <button class="btn" onclick="saveToServer()">💾 Сохранить на сервер</button>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat">🗡 Сила: <span id="stat-str">100</span></div>
+    <div class="stat">❤️ Жизнь: <span id="stat-hp">100</span></div>
+    <div class="stat">💥 Удар: <span id="stat-dmg">20</span></div>
+    <div class="stat">🛡 Броня: <span id="stat-armor">20</span></div>
+    <div class="stat">⚡ Энергия: <span id="stat-energy">100</span>/<span id="stat-max-energy">100</span></div>
+    <div class="stat">📈 Ур. <span id="stat-lvl">1</span> (<span id="stat-xp">0</span>/<span id="stat-xp-req">100</span>)</div>
+  </div>
+
+  <div class="tab-buttons">
+    <button class="tab-btn active" onclick="switchTab('hero')">🛡️ Герой</button>
+    <button class="tab-btn" onclick="switchTab('pet')">🐾 Питомец</button>
+    <button class="tab-btn" onclick="switchTab('cave')">⛏️ Пещеры</button>
+    <button class="tab-btn" onclick="switchTab('craft')">🔨 Крафт</button>
+    <button class="tab-btn" onclick="switchTab('talent')">🌟 Таланты</button>
+    <button class="tab-btn" onclick="switchTab('boss')">🐉 Боссы</button>
+    <button class="tab-btn" onclick="switchTab('chat')">💬 Чат</button>
+    <button class="tab-btn" onclick="switchTab('pvp')">⚔️ Бой</button>
+    <button class="tab-btn" onclick="switchTab('leaders')">🏆 Лидеры</button>
+  </div>
+
+  <!-- Вкладки -->
+  <div id="tab-hero" class="tab-content">
+    <div class="grid-3">
+      <div class="card">
+        <h3>🖼 Аватарка</h3>
+        <select id="avatar-select" onchange="updateAvatar()">
+          <option value="🛡️ Воин">🛡️ Воин</option>
+          <option value="🏹 Лучник">🏹 Лучник</option>
+          <option value="🧙 Маг">🧙 Маг</option>
+          <option value="🥷 Ниндзя">🥷 Ниндзя</option>
+          <option value="👑 Король">👑 Король</option>
+          <option value="🐉 Дракон">🐉 Дракон</option>
+          <option value="🐺 Волк">🐺 Волк</option>
+          <option value="🦅 Сокол">🦅 Сокол</option>
+          <option value="🗿 Голем">🗿 Голем</option>
+          <option value="🧟 Некромант">🧟 Некромант</option>
+          <option value="⚔️ Паладин">⚔️ Паладин</option>
+          <option value="🧝 Эльф">🧝 Эльф</option>
+          <option value="🦸 Варвар">🦸 Варвар</option>
+          <option value="☠️ Пират">☠️ Пират</option>
+          <option value="👸 Принцесса">👸 Принцесса</option>
+          <option value="🌪 Шаман">🌪 Шаман</option>
+        </select>
+        <div style="font-size: 2rem; margin-top: 10px;" id="avatar-display"></div>
+      </div>
+      <div class="card">
+        <h3>🏅 Клан</h3>
+        <select id="clan-select" onchange="updateClan()">
+          <option value="Стальное Сердце">Стальное Сердце (+15% Броня)</option>
+          <option value="Клык Бездны">Клык Бездны (+20% Удар)</option>
+          <option value="Пламя Асура">Пламя Асура (+15% Сила)</option>
+        </select>
+        <p id="clan-bonus-text" style="font-size: 0.9rem; margin-top: 8px;"></p>
+      </div>
+      <div class="card">
+        <h3>🎒 Сумка</h3>
+        <p>Слоты: <span id="bag-used">0</span>/<span id="bag-max">20</span></p>
+        <p>Золото в сумке: <span id="bag-gold">0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-pet" class="tab-content" style="display:none;">
+    <div class="grid-3">
+      <div class="card">
+        <h3>🐾 Питомец</h3>
+        <select id="pet-select" onchange="updatePet()">
+          <option value="Дракон">Дракон (+30% Сила)</option>
+          <option value="Волк">Волк (+25% Удар)</option>
+          <option value="Тигр">Тигр (+25% Броня)</option>
+          <option value="Феникс">Феникс (+20% Реген)</option>
+          <option value="Голем">Голем (+35% HP)</option>
+          <option value="Медведь">Медведь (+25% HP)</option>
+          <option value="Единорог">Единорог (+25% Крит)</option>
+          <option value="Ворон">Ворон (+30% Дроп)</option>
+        </select>
+        <p>Ур. <span id="pet-lvl">1</span> | Опыт: <span id="pet-xp">0</span>/<span id="pet-xp-req">100</span></p>
+      </div>
+      <div class="card">
+        <h3>🛡 Броня питомца</h3>
+        <p>Шлем: <span id="pet-helm">Ткань</span> (+5)</p>
+        <p>Кольчуга: <span id="pet-chest">Ткань</span> (+5)</p>
+        <p>Когти: <span id="pet-weapon">Ткань</span> (+5)</p>
+        <p>Амулет: <span id="pet-amulet">Нет</span> (+0)</p>
+        <button class="btn" onclick="upgradePetArmor('helm')">Улучшить шлем</button>
+        <button class="btn" onclick="upgradePetArmor('chest')">Улучшить кольчугу</button>
+        <button class="btn" onclick="upgradePetArmor('weapon')">Улучшить когти</button>
+        <button class="btn" onclick="upgradePetArmor('amulet')">Улучшить амулет</button>
+      </div>
+      <div class="card">
+        <h3>💎 Руны</h3>
+        <p>Слоты: <span id="pet-runes">0</span>/4</p>
+        <button class="btn" onclick="addPetRune()">Добавить руну (100 золота)</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-cave" class="tab-content" style="display:none;">
+    <div class="card">
+      <h3>⛏ Пещеры — Добыча руды</h3>
+      <p>Выберите пещеру и отправляйтесь на добычу. За каждый забег тратится <b>15 энергии</b>.</p>
+      <select id="cave-select">
+        <option value="Медная">Медная пещера (Медь x3-5)</option>
+        <option value="Железная">Железная пещера (Железо x2-4 + Медь x1-2)</option>
+        <option value="Серебряная">Серебряная пещера (Серебро x1-3 + Кристаллы x1)</option>
+        <option value="Мифриловая">Мифриловая пещера (Мифрил x1 + Кристаллы x2-3)</option>
+        <option value="Золотая">Золотая пещера (Золото x20-40)</option>
+        <option value="Алмазная">Алмазная пещера (Кристаллы x4-8 + Мифрил x1)</option>
+      </select>
+      <button class="btn" onclick="mineCave()">Отправиться в пещеру</button>
+      <div class="log" id="cave-log"></div>
+    </div>
+    <div class="card">
+      <h3>📦 Инвентарь ресурсов</h3>
+      <p>Медь: <span id="res-copper">0</span></p>
+      <p>Железо: <span id="res-iron">0</span></p>
+      <p>Серебро: <span id="res-silver">0</span></p>
+      <p>Мифрил: <span id="res-mithril">0</span></p>
+      <p>Кристаллы: <span id="res-crystal">0</span></p>
+    </div>
+  </div>
+
+  <div id="tab-craft" class="tab-content" style="display:none;">
+    <div class="card">
+      <h3>🔨 Кузница — Крафт брони</h3>
+      <div class="craft-grid">
+        <div>
+          <h4>🧥 Ткань → Кожа</h4>
+          <p>Требуется: Медь x2</p>
+          <button class="btn" onclick="craftItem('leather')">Создать (2 Медь)</button>
+        </div>
+        <div>
+          <h4>🦴 Кожа → Кольчуга</h4>
+          <p>Требуется: Железо x3 + Медь x1</p>
+          <button class="btn" onclick="craftItem('chain')">Создать (3 Железо, 1 Медь)</button>
+        </div>
+        <div>
+          <h4>🛡 Кольчуга → Стальные латы</h4>
+          <p>Требуется: Железо x5 + Кристаллы x2</p>
+          <button class="btn" onclick="craftItem('steel')">Создать (5 Железо, 2 Кристаллы)</button>
+        </div>
+        <div>
+          <h4>✨ Стальные латы → Мифрил</h4>
+          <p>Требуется: Мифрил x2 + Кристаллы x5</p>
+          <button class="btn" onclick="craftItem('mithril')">Создать (2 Мифрил, 5 Кристаллы)</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🎒 Снаряжение героя</h3>
+      <p>Шлем: <span id="hero-helm">Нет</span></p>
+      <p>Нагрудник: <span id="hero-chest">Нет</span></p>
+      <p>Оружие: <span id="hero-weapon">Нет</span></p>
+      <p>Амулет: <span id="hero-amulet">Нет</span></p>
+    </div>
+  </div>
+
+  <div id="tab-talent" class="tab-content" style="display:none;">
+    <div class="card">
+      <h3>🌠 Древо талантов (Серебро)</h3>
+      <p>Текущее серебро: <span id="talent-silver">0</span></p>
+      <div class="talent-tree">
+        <div class="talent" onclick="buyTalent('str')">Сила (+10) — 50 серебра</div>
+        <div class="talent" onclick="buyTalent('hp')">Жизнь (+50) — 50 серебра</div>
+        <div class="talent" onclick="buyTalent('dmg')">Удар (+5) — 40 серебра</div>
+        <div class="talent" onclick="buyTalent('armor')">Броня (+5) — 40 серебра</div>
+        <div class="talent" onclick="buyTalent('energy')">Энергия (+20) — 30 серебра</div>
+        <div class="talent" onclick="buyTalent('regen')">Реген (+2/сек) — 60 серебра</div>
+        <div class="talent" onclick="buyTalent('crit')">Крит шанс (+5%) — 70 серебра</div>
+        <div class="talent" onclick="buyTalent('drop')">Шанс дропа (+10%) — 80 серебра</div>
+      </div>
+      <div class="log" id="talent-log"></div>
+    </div>
+  </div>
+
+  <div id="tab-boss" class="tab-content" style="display:none;">
+    <div class="card">
+      <h3>🐉 Испытания боссов</h3>
+      <p>Выберите босса и сразитесь. Бой тратит <b>30 энергии</b>. Награды: Золото, Кристаллы, Опыт.</p>
+      <select id="boss-select"></select>
+      <button class="btn" onclick="fightBoss()">Сразиться с боссом</button>
+      <div class="log" id="boss-log"></div>
+    </div>
+  </div>
+
+  <div id="tab-chat" class="tab-content" style="display:none;">
+    <div class="card">
+      <h3>💬 Чат</h3>
+      <div class="log" id="chat-log" style="max-height:300px;"></div>
+      <div class="pass-row" style="margin-top:8px;">
+        <input type="text" id="chat-input" placeholder="Напишите сообщение..." style="flex:1; min-width:150px;">
+        <button class="btn" onclick="sendChat()">Отправить</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-pvp" class="tab-content" style="display:none;">
+    <div class="card">
+      <h3>⚔️ Бой с игроком</h3>
+      <p>Нажмите «Искать противника» — игра подберёт другого игрока онлайн. Побеждает тот, кто первым сбросит HP соперника до 0.</p>
+      <div class="pass-row">
+        <button class="btn btn-primary" id="pvp-queue-btn" onclick="pvpQueue()">🔍 Искать противника</button>
+        <button class="btn" onclick="pvpAttack(15)" id="pvp-attack-light">⚔️ Удар (15)</button>
+        <button class="btn btn-danger" onclick="pvpAttack(35)" id="pvp-attack-heavy">💥 Тяжёлый (35)</button>
+      </div>
+      <div class="log" id="pvp-log" style="max-height:250px;"></div>
+      <p id="pvp-status" style="font-size:0.9rem; margin-top:8px;"></p>
+    </div>
+  </div>
+
+  <div id="tab-leaders" class="tab-content" style="display:none;">
+    <div class="card">
+      <h3>🏆 Таблица лидеров</h3>
+      <button class="btn" onclick="loadLeaderboard()">Обновить</button>
+      <div class="log" id="leaders-log" style="max-height:300px; margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📜 Лог событий</h3>
+    <div class="log" id="main-log"></div>
+  </div>
+</div>
+
+<script>
+// Инициализация данных
+let state = {
+  gold: 0, silver: 0, crystal: 0,
+  str: 100, hp: 100, dmg: 20, armor: 20, energy: 100, maxEnergy: 100,
+  lvl: 1, xp: 0, xpReq: 100,
+  avatar: '🛡️ Воин', clan: 'Стальное Сердце',
+  bagUsed: 0, bagMax: 20, bagGold: 0,
+  pet: 'Дракон', petLvl: 1, petXp: 0, petXpReq: 100,
+  petArmor: { helm: 'Ткань', chest: 'Ткань', weapon: 'Ткань', amulet: 'Нет' },
+  petRunes: 0,
+  resources: { copper: 0, iron: 0, silver: 0, mithril: 0, crystal: 0 },
+  heroGear: { helm: 'Нет', chest: 'Нет', weapon: 'Нет', amulet: 'Нет' },
+  talents: { str: false, hp: false, dmg: false, armor: false, energy: false, regen: false, crit: false, drop: false },
+  talentSilver: 0,
+  nick: null, role: null, isOwner: false
+};
+
+// Загрузка сохранений
+function loadGame() {
+  const saved = localStorage.getItem('asur_game_v2');
+  if (saved) {
+    try { state = JSON.parse(saved); } catch (e) {}
+  }
+  fillBosses();
+  render();
+  renderPassStatus();
+  // восстанавливаем онлайн-сессию по токену
+  restoreSession();
+  loadLeaderboard();
+  const chatEl = document.getElementById('chat-log');
+  if (chatEl) chatEl.innerHTML = 'Добро пожаловать в чат! Войдите, чтобы писать.<br>';
+}
+
+// Сохранение
+function saveGame() {
+  localStorage.setItem('asur_game_v2', JSON.stringify(state));
+}
+
+// --- Онлайн-аккаунты (сервер) ---
+const OWNER_NICK = 'Santa Tedis'; // ник владельца
+let currentUser = null; // { nick, role, isOwner, token }
+let ws = null; // WebSocket для чата и боёв
+
+function apiBase() {
+  // если страница открыта с сервера — используем тот же origin; иначе localhost:8080
+  if (location.protocol === 'http:' || location.protocol === 'https:') {
+    return location.origin;
+  }
+  return 'http://127.0.0.1:8080';
+}
+
+function accountNick() { return document.getElementById('acc-nick').value.trim(); }
+function accountPass() { return document.getElementById('acc-pass').value; }
+
+async function apiCall(path, opts = {}) {
+  const res = await fetch(apiBase() + path, opts);
+  let data = {};
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+  return data;
+}
+
+function setOnlineStatus(text, color) {
+  const el = document.getElementById('online-status');
+  el.innerText = ' • ' + text;
+  el.style.color = color || '#a5d6a7';
+}
+
+function setCurrentUser(nick, role, token) {
+  currentUser = { nick: nick, role: role, isOwner: nick === OWNER_NICK, token: token };
+  try { localStorage.setItem('asur_token', token); } catch (e) {}
+  state.nick = nick;
+  state.role = role;
+  state.isOwner = nick === OWNER_NICK;
+}
+
+function renderPassStatus() {
+  const el = document.getElementById('pass-status');
+  const inBox = document.getElementById('account-in');
+  const outBox = document.getElementById('account-out');
+  const info = document.getElementById('account-info');
+  if (currentUser) {
+    inBox.style.display = 'none';
+    outBox.style.display = 'block';
+    let line = currentUser.isOwner
+      ? '👑 Владелец: ' + currentUser.nick
+      : '✅ Игрок: ' + currentUser.nick;
+    if (currentUser.role) line += ' (роль: ' + currentUser.role + ')';
+    info.innerText = line;
+  } else {
+    inBox.style.display = 'block';
+    outBox.style.display = 'none';
+    el.innerText = 'Вы не вошли. Войдите или зарегистрируйтесь.';
+    el.style.color = '#ffb74d';
+  }
+}
+
+async function accountRegister() {
+  const nick = accountNick();
+  const pass = accountPass();
+  if (!nick) { alert('Введите никнейм.'); return; }
+  if (!/^[A-Za-z0-9 _-]+$/.test(nick)) { alert('Ник: латиница, цифры, пробел, _ -'); return; }
+  if (!pass) { alert('Введите пароль.'); return; }
+  if (pass.length < 4) { alert('Пароль минимум 4 символа.'); return; }
+  try {
+    const r = await apiCall('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nick, pass })
+    });
+    setCurrentUser(r.nick, r.role, r.token);
+    clearAccountInputs();
+    loadStateFromServer();
+    connectWS();
+    log('🎉 Аккаунт создан: ' + nick + (currentUser.isOwner ? ' (👑 владелец)' : ''));
+    renderPassStatus();
+    render();
+  } catch (e) {
+    alert('Ошибка: ' + e.message);
+  }
+}
+
+async function accountLogin() {
+  const nick = accountNick();
+  const pass = accountPass();
+  if (!nick || !pass) { alert('Введите никнейм и пароль.'); return; }
+  try {
+    const r = await apiCall('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nick, pass })
+    });
+    setCurrentUser(r.nick, r.role, r.token);
+    clearAccountInputs();
+    await loadStateFromServer();
+    connectWS();
+    log(currentUser.isOwner ? ('👑 Добро пожаловать, владелец ' + nick) : ('✅ Вход выполнен: ' + nick));
+    renderPassStatus();
+    render();
+  } catch (e) {
+    alert('Ошибка: ' + e.message);
+  }
+}
+
+async function loadStateFromServer() {
+  try {
+    const r = await apiCall('/api/load?token=' + encodeURIComponent(currentUser.token));
+    if (r.state && Object.keys(r.state).length) {
+      Object.assign(state, r.state);
+      state.nick = currentUser.nick;
+      state.isOwner = currentUser.isOwner;
+    }
+  } catch (e) {
+    log('Не удалось загрузить прогресс с сервера.');
+  }
+}
+
+async function saveToServer() {
+  if (!currentUser) { alert('Сначала войдите в аккаунт.'); return; }
+  const toSave = Object.assign({}, state);
+  delete toSave.nick; delete toSave.role; delete toSave.isOwner;
+  try {
+    await apiCall('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentUser.token },
+      body: JSON.stringify({ state: toSave })
+    });
+    log('💾 Прогресс сохранён на сервер.');
+    setOnlineStatus('сохранено', '#a5d6a7');
+  } catch (e) {
+    alert('Ошибка сохранения: ' + e.message);
+  }
+}
+
+function accountLogout() {
+  if (ws) { try { ws.close(); } catch (e) {} ws = null; }
+  currentUser = null;
+  try { localStorage.removeItem('asur_token'); } catch (e) {}
+  state.nick = null; state.role = null; state.isOwner = false;
+  renderPassStatus();
+  setOnlineStatus('офлайн', '#ffb74d');
+  log('Вы вышли из аккаунта.');
+}
+
+function clearAccountInputs() {
+  document.getElementById('acc-nick').value = '';
+  document.getElementById('acc-pass').value = '';
+}
+
+// Восстановление сессии по токену
+async function restoreSession() {
+  try {
+    const token = localStorage.getItem('asur_token');
+    if (!token) return;
+    const r = await apiCall('/api/load?token=' + encodeURIComponent(token));
+    // настоящий ник и роль приходят от сервера
+    const nick = r.nick;
+    const role = r.role || 'player';
+    setCurrentUser(nick, role, token);
+    if (r.state && typeof r.state === 'object') {
+      Object.assign(state, r.state);
+    }
+    state.nick = nick; state.isOwner = nick === OWNER_NICK; state.role = role;
+    renderPassStatus();
+    connectWS();
+    log('👋 С возвращением, ' + nick + '!');
+    render();
+  } catch (e) {
+    try { localStorage.removeItem('asur_token'); } catch (x) {}
+  }
+  setOnlineStatus('онлайн', '#a5d6a7');
+}
+
+// --- WebSocket: чат и бои ---
+function wsUrl() {
+  let base = apiBase().replace(/^http/, 'ws') + '/ws?nick=' + encodeURIComponent(currentUser.nick);
+  return base;
+}
+
+function connectWS() {
+  if (!currentUser) return;
+  if (ws) { try { ws.close(); } catch (e) {} ws = null; }
+  try {
+    ws = new WebSocket(wsUrl());
+    ws.onopen = () => { setOnlineStatus('онлайн', '#a5d6a7'); };
+    ws.onmessage = (ev) => {
+      let msg;
+      try { msg = JSON.parse(ev.data); } catch (e) { return; }
+      handleWSMessage(msg);
+    };
+    ws.onclose = () => { ws = null; setOnlineStatus('офлайн', '#ffb74d'); };
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  } catch (e) {
+    setOnlineStatus('нет соединения', '#ffb74d');
+  }
+}
+
+function handleWSMessage(msg) {
+  if (msg.type === 'chat') {
+    chatLine(msg.nick, msg.text);
+  } else if (msg.type === 'fight_start') {
+    pvpLog('⚔️ Бой начат! Соперник: ' + msg.opponent + '. HP у всех: ' + msg.hp + '. ' + (msg.your_turn ? 'ВАШ ХОД!' : 'Ход соперника...'));
+    document.getElementById('pvp-status').innerText = 'В бою с: ' + msg.opponent + (msg.your_turn ? ' — ваш ход!' : ' — ждите...');
+  } else if (msg.type === 'fight_state') {
+    pvpLog('💥 ХП: ' + msg.hp[currentUser.nick] + ' (ты) — ' + msg.hp[msg.turn] + ' (соперник). Ходит: ' + msg.turn);
+    document.getElementById('pvp-status').innerText = 'Ваш ход!';
+  } else if (msg.type === 'fight_over') {
+    const won = msg.winner === currentUser.nick;
+    pvpLog((won ? '🏆 ПОБЕДА! Вы победили!' : '💀 Поражение. Победил: ') + msg.winner);
+    document.getElementById('pvp-status').innerText = won ? 'Победа!' : 'Поражение';
+    document.getElementById('pvp-queue-btn').disabled = false;
+  } else if (msg.type === 'fight_reward') {
+    state.gold += msg.gold; state.xp += msg.xp;
+    log('⚔️ Награда за бой: +' + msg.gold + ' золота, +' + msg.xp + ' опыта.');
+    render();
+  } else if (msg.type === 'fight_err') {
+    pvpLog('⚠️ ' + msg.text);
+  }
+}
+
+function chatLine(nick, text) {
+  const el = document.getElementById('chat-log');
+  const cls = (nick === currentUser.nick) ? 'Вы' : nick;
+  el.innerHTML += '<span style="color:#ffd600;">' + esc(nick) + ':</span> ' + esc(text) + '<br>';
+  el.scrollTop = el.scrollHeight;
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  if (!ws || ws.readyState !== 1) { alert('Нет соединения. Вы не подключены к чату.'); return; }
+  ws.send(JSON.stringify({ type: 'chat', text: text }));
+  input.value = '';
+}
+
+function esc(t) {
+  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+async function loadLeaderboard() {
+  const el = document.getElementById('leaders-log');
+  try {
+    const rows = await apiCall('/api/leaderboard');
+    if (!rows.length) { el.innerText = 'Пока нет игроков.'; return; }
+    let html = '<table style="width:100%; border-collapse:collapse; font-family:monospace;">';
+    html += '<tr style="color:#ffd600;"><th>#</th><th>Игрок</th><th>Ур.</th><th>Золото</th><th>Роль</th></tr>';
+    rows.forEach((r, i) => {
+      const crown = (r.role === 'owner') ? '👑' : '';
+      html += '<tr>' +
+        '<td>' + (i + 1) + '</td>' +
+        '<td>' + esc(r.nick) + ' ' + crown + '</td>' +
+        '<td>' + r.lvl + '</td>' +
+        '<td>' + (r.gold || 0) + '</td>' +
+        '<td>' + (r.role === 'owner' ? 'владелец' : 'игрок') + '</td>' +
+        '</tr>';
+    });
+    html += '</table>';
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerText = 'Ошибка загрузки: ' + e.message;
+  }
+}
+
+// --- PvP ---
+function pvpLog(t) {
+  const el = document.getElementById('pvp-log');
+  el.innerHTML += esc(t) + '<br>';
+  el.scrollTop = el.scrollHeight;
+}
+
+async function pvpQueue() {
+  if (!currentUser) { alert('Сначала войдите в аккаунт.'); return; }
+  if (!ws || ws.readyState !== 1) { alert('Нет соединения с сервером.'); return; }
+  ws.send(JSON.stringify({ type: 'queue_pvp' }));
+  pvpLog('🔍 Вы в очереди на бой...');
+  document.getElementById('pvp-queue-btn').disabled = true;
+  document.getElementById('pvp-status').innerText = 'Ищем противника...';
+}
+
+function pvpAttack(dmg) {
+  if (!currentUser) { alert('Сначала войдите в аккаунт.'); return; }
+  if (!ws || ws.readyState !== 1) { alert('Нет соединения.'); return; }
+  ws.send(JSON.stringify({ type: 'fight_move', dmg: dmg }));
+  pvpLog('⚔️ Ход: вы нанесли ' + dmg + ' урона.');
+}
+
+// Рендер интерфейса
+function render() {
+  const badge = document.getElementById('player-badge');
+  if (currentUser) {
+    badge.innerText = currentUser.isOwner ? ('👑 ' + currentUser.nick) : ('🧑 ' + currentUser.nick);
+  } else {
+    badge.innerText = '';
+  }
+  document.getElementById('gold-val').innerText = state.gold;
+  document.getElementById('silver-val').innerText = state.silver;
+  document.getElementById('crystal-val').innerText = state.crystal;
+  document.getElementById('stat-str').innerText = state.str;
+  document.getElementById('stat-hp').innerText = state.hp;
+  document.getElementById('stat-dmg').innerText = state.dmg;
+  document.getElementById('stat-armor').innerText = state.armor;
+  document.getElementById('stat-energy').innerText = state.energy;
+  document.getElementById('stat-max-energy').innerText = state.maxEnergy;
+  document.getElementById('stat-lvl').innerText = state.lvl;
+  document.getElementById('stat-xp').innerText = state.xp;
+  document.getElementById('stat-xp-req').innerText = state.xpReq;
+  document.getElementById('avatar-display').innerText = state.avatar;
+  document.getElementById('clan-select').value = state.clan;
+  updateClan();
+  document.getElementById('bag-used').innerText = state.bagUsed;
+  document.getElementById('bag-max').innerText = state.bagMax;
+  document.getElementById('bag-gold').innerText = state.bagGold;
+  document.getElementById('pet-select').value = state.pet;
+  document.getElementById('pet-lvl').innerText = state.petLvl;
+  document.getElementById('pet-xp').innerText = state.petXp;
+  document.getElementById('pet-xp-req').innerText = state.petXpReq;
+  document.getElementById('pet-helm').innerText = state.petArmor.helm;
+  document.getElementById('pet-chest').innerText = state.petArmor.chest;
+  document.getElementById('pet-weapon').innerText = state.petArmor.weapon;
+  document.getElementById('pet-amulet').innerText = state.petArmor.amulet;
+  document.getElementById('pet-runes').innerText = state.petRunes;
+  document.getElementById('res-copper').innerText = state.resources.copper;
+  document.getElementById('res-iron').innerText = state.resources.iron;
+  document.getElementById('res-silver').innerText = state.resources.silver;
+  document.getElementById('res-mithril').innerText = state.resources.mithril;
+  document.getElementById('res-crystal').innerText = state.resources.crystal;
+  document.getElementById('hero-helm').innerText = state.heroGear.helm;
+  document.getElementById('hero-chest').innerText = state.heroGear.chest;
+  document.getElementById('hero-weapon').innerText = state.heroGear.weapon;
+  document.getElementById('hero-amulet').innerText = state.heroGear.amulet;
+  document.getElementById('talent-silver').innerText = state.talentSilver;
+  updateTalentUI();
+  saveGame();
+}
+
+// Переключение вкладок
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).style.display = 'block';
+  event.target.classList.add('active');
+}
+
+// Аватар и клан
+function updateAvatar() {
+  state.avatar = document.getElementById('avatar-select').value;
+  document.getElementById('avatar-display').innerText = state.avatar;
+  log('Вы сменили аватарку на: ' + state.avatar);
+}
+
+function updateClan() {
+  state.clan = document.getElementById('clan-select').value;
+  const text = document.getElementById('clan-bonus-text');
+  if (state.clan === 'Стальное Сердце') {
+    text.innerText = '+15% к броне';
+    state.armor = Math.floor(100 * 1.15); // базовый пример
+  } else if (state.clan === 'Клык Бездны') {
+    text.innerText = '+20% к удару';
+    state.dmg = Math.floor(20 * 1.2);
+  } else {
+    text.innerText = '+15% к силе';
+    state.str = Math.floor(100 * 1.15);
+  }
+}
+
+// Питомец
+function updatePet() {
+  state.pet = document.getElementById('pet-select').value;
+  log('Вы выбрали питомца: ' + state.pet);
+}
+
+function upgradePetArmor(part) {
+  if (state.energy < 15) {
+    alert('Недостаточно энергии! Нужно 15.');
+    return;
+  }
+  const tiers = ['Ткань', 'Кожа', 'Кольчуга', 'Стальные латы', 'Мифрил'];
+  const current = state.petArmor[part];
+  const idx = tiers.indexOf(current);
+  if (idx >= tiers.length - 1) {
+    log('Броня уже максимального уровня!');
+    return;
+  }
+  const cost = (idx + 1) * 50;
+  if (state.gold < cost) {
+    alert('Недостаточно золота. Нужно: ' + cost);
+    return;
+  }
+  state.gold -= cost;
+  state.energy -= 15;
+  state.petArmor[part] = tiers[idx + 1];
+  log('Улучшена броня питомца (' + part + ') до: ' + state.petArmor[part]);
+  render();
+}
+
+function addPetRune() {
+  if (state.petRunes >= 4) {
+    alert('Максимум рун: 4');
+    return;
+  }
+  if (state.gold < 100) {
+    alert('Недостаточно золота. Нужно: 100');
+    return;
+  }
+  state.gold -= 100;
+  state.petRunes++;
+  log('Добавлена руна питомцу. Всего: ' + state.petRunes);
+  render();
+}
+
+// Пещеры и добыча
+function mineCave() {
+  if (state.energy < 15) {
+    alert('Недостаточно энергии! Нужно 15.');
+    return;
+  }
+  const cave = document.getElementById('cave-select').value;
+  state.energy -= 15;
+  let logText = '';
+  if (cave === 'Медная') {
+    const amount = Math.floor(Math.random() * 3) + 3;
+    state.resources.copper += amount;
+    logText = 'Добыто: Медь x' + amount;
+  } else if (cave === 'Железная') {
+    const iron = Math.floor(Math.random() * 3) + 2;
+    const copper = Math.floor(Math.random() * 2) + 1;
+    state.resources.iron += iron;
+    state.resources.copper += copper;
+    logText = 'Добыто: Железо x' + iron + ', Медь x' + copper;
+  } else if (cave === 'Серебряная') {
+    const silver = Math.floor(Math.random() * 3) + 1;
+    const crystal = 1;
+    state.resources.silver += silver;
+    state.resources.crystal += crystal;
+    logText = 'Добыто: Серебро x' + silver + ', Кристаллы x' + crystal;
+  } else if (cave === 'Золотая') {
+    const gold = Math.floor(Math.random() * 21) + 20;
+    state.gold += gold;
+    logText = 'Добыто: Золото x' + gold;
+  } else if (cave === 'Алмазная') {
+    const crystal = Math.floor(Math.random() * 5) + 4;
+    const mithril = 1;
+    state.resources.crystal += crystal;
+    state.resources.mithril += mithril;
+    logText = 'Добыто: Кристаллы x' + crystal + ', Мифрил x' + mithril;
+  } else {
+    const mithril = 1;
+    const crystal = Math.floor(Math.random() * 3) + 2;
+    state.resources.mithril += mithril;
+    state.resources.crystal += crystal;
+    logText = 'Добыто: Мифрил x' + mithril + ', Кристаллы x' + crystal;
+  }
+  log('Вы отправились в пещеру: ' + cave + '. ' + logText);
+  render();
+}
+
+// Крафт
+function craftItem(type) {
+  let success = false;
+  if (type === 'leather') {
+    if (state.resources.copper >= 2) {
+      state.resources.copper -= 2;
+      success = true;
+      log('Создана кожаная броня.');
+    } else alert('Недостаточно меди (нужно 2).');
+  } else if (type === 'chain') {
+    if (state.resources.iron >= 3 && state.resources.copper >= 1) {
+      state.resources.iron -= 3;
+      state.resources.copper -= 1;
+      success = true;
+      log('Создана кольчуга.');
+    } else alert('Недостаточно ресурсов (3 Железо, 1 Медь).');
+  } else if (type === 'steel') {
+    if (state.resources.iron >= 5 && state.resources.crystal >= 2) {
+      state.resources.iron -= 5;
+      state.resources.crystal -= 2;
+      success = true;
+      log('Созданы стальные латы.');
+    } else alert('Недостаточно ресурсов (5 Железо, 2 Кристаллы).');
+  } else if (type === 'mithril') {
+    if (state.resources.mithril >= 2 && state.resources.crystal >= 5) {
+      state.resources.mithril -= 2;
+      state.resources.crystal -= 5;
+      success = true;
+      log('Создана мифриловая броня.');
+    } else alert('Недостаточно ресурсов (2 Мифрил, 5 Кристаллы).');
+  }
+  if (success) render();
+}
+
+// Таланты
+function updateTalentUI() {
+  document.querySelectorAll('.talent').forEach(el => {
+    const key = el.getAttribute('onclick').split("'")[1];
+    if (state.talents[key]) el.classList.add('unlocked');
+    else el.classList.remove('unlocked');
+  });
+}
+
+function buyTalent(key) {
+  if (state.talents[key]) {
+    alert('Талант уже изучен!');
+    return;
+  }
+  const costs = { str: 50, hp: 50, dmg: 40, armor: 40, energy: 30, regen: 60, crit: 70, drop: 80 };
+  const cost = costs[key];
+  if (state.silver < cost) {
+    alert('Недостаточно серебра. Нужно: ' + cost);
+    return;
+  }
+  state.silver -= cost;
+  state.talents[key] = true;
+  // Применение бонусов
+  if (key === 'str') state.str += 10;
+  if (key === 'hp') state.hp += 50;
+  if (key === 'dmg') state.dmg += 5;
+  if (key === 'armor') state.armor += 5;
+  if (key === 'energy') state.maxEnergy += 20;
+  if (key === 'regen') state.hp += 10; // упрощенно
+  if (key === 'crit') state.dmg = Math.floor(state.dmg * 1.05);
+  if (key === 'drop') state.resources.crystal += 1; // упрощенно
+  log('Изучен талант: ' + key + '. Потрачено серебра: ' + cost);
+  updateTalentUI();
+  render();
+}
+
+// Боссы
+const BOSSES = [
+  { name: 'Крыса-альбинос', hp: 100, dmg: 8,  gold: [40, 60],  crystal: [3, 6], xp: 80,  icon: '🐀' },
+  { name: 'Гоблин-вождь',   hp: 300, dmg: 15, gold: [80, 130], crystal: [6, 12], xp: 150, icon: '👺' },
+  { name: 'Лесной тролль',  hp: 600, dmg: 22, gold: [130, 200], crystal: [10, 18], xp: 240, icon: '🧌' },
+  { name: 'Огр',            hp: 800, dmg: 30, gold: [180, 260], crystal: [14, 22], xp: 320, icon: '👹' },
+  { name: 'Тёмный рыцарь',  hp: 1200, dmg: 40, gold: [240, 340], crystal: [18, 30], xp: 420, icon: '⚔️' },
+  { name: 'Ледяной гигант', hp: 1600, dmg: 50, gold: [300, 420], crystal: [24, 36], xp: 540, icon: '🧊' },
+  { name: 'Драконий страж', hp: 2000, dmg: 68, gold: [380, 520], crystal: [30, 45], xp: 680, icon: '🐲' },
+  { name: 'Древний дракон', hp: 5000, dmg: 95, gold: [600, 900], crystal: [50, 80], xp: 1200, icon: '🐉' }
+];
+
+// Наполнение списка боссов
+function fillBosses() {
+  const sel = document.getElementById('boss-select');
+  sel.innerHTML = '';
+  BOSSES.forEach((b, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = b.icon + ' ' + b.name + ' (HP: ' + b.hp + ')';
+    sel.appendChild(opt);
+  });
+}
+
+function fightBoss() {
+  if (state.energy < 30) {
+    alert('Недостаточно энергии! Нужно 30.');
+    return;
+  }
+  const b = BOSSES[+document.getElementById('boss-select').value];
+  if (!b) { alert('Босс не выбран!'); return; }
+
+  state.energy -= 30;
+  let playerHp = state.hp;
+  let bossHp = b.hp; // локальная копия — не портим массив BOSSES
+  let damage = state.dmg;
+  if (state.talents.crit) damage = Math.floor(damage * 1.05);
+  let bossDamage = Math.floor(b.dmg * 0.9) - Math.floor(state.armor * 0.15);
+  if (bossDamage < 5) bossDamage = 5;
+  let turns = 0;
+  const logEl = document.getElementById('boss-log');
+  logEl.innerHTML = '';
+  logEl.innerHTML += '⚔️ Бой: Вы против ' + b.icon + ' ' + b.name + ' (HP: ' + b.hp + ')<br>';
+
+  while (bossHp > 0 && playerHp > 0) {
+    turns++;
+    if (state.talents.crit && Math.random() < 0.3) damage = Math.floor(state.dmg * 1.5);
+    else damage = state.dmg;
+    bossHp -= damage;
+    logEl.innerHTML += '🗡 Вы нанесли ' + damage + ' урона. У босса осталось: ' + Math.max(0, bossHp) + '<br>';
+    if (bossHp <= 0) break;
+    playerHp -= bossDamage;
+    logEl.innerHTML += b.icon + ' Босс нанес ' + bossDamage + ' урона. Ваше HP: ' + Math.max(0, playerHp) + '<br>';
+  }
+
+  if (playerHp > 0) {
+    const luck = state.talents.drop ? 1.15 : 1;
+    const goldReward = Math.floor((Math.random() * (b.gold[1] - b.gold[0]) + b.gold[0]) * luck);
+    const crystalReward = Math.floor((Math.random() * (b.crystal[1] - b.crystal[0]) + b.crystal[0]) * luck);
+    state.gold += goldReward;
+    state.crystal += crystalReward;
+    state.xp += b.xp;
+    logEl.innerHTML += '🏆 Победа! Награды: Золото x' + goldReward + ', Кристаллы x' + crystalReward + ', Опыт x' + b.xp + '<br>';
+    checkLevelUp();
+  } else {
+    logEl.innerHTML += '💀 Поражение. Вы потеряли 10% золота.<br>';
+    const loss = Math.floor(state.gold * 0.1);
+    state.gold -= loss;
+  }
+  render();
+}
+
+function checkLevelUp() {
+  while (state.xp >= state.xpReq) {
+    state.xp -= state.xpReq;
+    state.lvl++;
+    state.xpReq = Math.floor(state.xpReq * 1.5);
+    state.maxEnergy += 10;
+    state.energy = state.maxEnergy;
+    log('🎉 Уровень повышен! Теперь вы ' + state.lvl + ' уровня!');
+  }
+  render();
+}
+
+function log(msg) {
+  const el = document.getElementById('main-log');
+  el.innerHTML = (new Date().toLocaleTimeString() + ' — ' + msg + '<br>') + el.innerHTML;
+}
+
+// Запуск
+loadGame();
+</script>
+</body>
+</html>
