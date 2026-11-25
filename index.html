@@ -97,9 +97,34 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
 .bottom-nav{display:flex; justify-content:space-around; align-items:center; background:linear-gradient(135deg,rgba(40,28,80,0.95),rgba(15,10,35,0.98)); border:1px solid rgba(255,183,0,0.3); border-radius:14px; padding:10px 6px; margin-top:6px;}
 .bottom-nav button{background:transparent; border:none; color:var(--s); font-size:1.5rem; cursor:pointer; padding:6px 12px; border-radius:10px; transition:all .15s;}
 .bottom-nav button:hover{background:rgba(255,183,0,0.15); transform:translateY(-2px);}
+/* === Стартовый экран «Битва титанов» === */
+#splash{position:fixed; inset:0; z-index:999; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; overflow-y:auto; background:#0b0b14;}
+#splash.hidden{display:none;}
+.splash-art{max-width:460px; width:92%; margin:18px auto 14px; border:2px solid rgba(255,183,0,0.5); border-radius:18px; box-shadow:0 0 30px rgba(255,183,0,0.25); overflow:hidden; background:#000;}
+.splash-title{text-align:center; margin:18px 10px 8px; font-size:2.1rem; font-weight:800; letter-spacing:3px; color:#aee3ff; text-shadow:0 0 18px rgba(80,160,255,0.6);}
+.splash-sub{text-align:center; color:#8a93a8; font-size:0.9rem; margin:0 12px 16px;}
+.splash-menu{width:88%; max-width:400px; display:flex; flex-direction:column; gap:10px; margin:0 auto;}
+.splash-btn{width:100%; padding:14px; border:none; border-radius:12px; font-size:1.05rem; font-weight:800; letter-spacing:1px; cursor:pointer; color:#fff; transition:all .15s;}
+.splash-btn:active{transform:scale(0.98);}
+.splash-btn.play{background:linear-gradient(135deg,#1d4e63,#0e2a38); box-shadow:0 4px 16px rgba(30,90,120,0.4);}
+.splash-btn.gray{background:rgba(70,74,90,0.9);}
+.splash-foot{text-align:center; color:#9aa0b0; font-size:0.8rem; margin:18px 0 8px;}
 </style>
 </head>
 <body>
+<div id="splash">
+  <div class="splash-title">⚡ БИТВА ТИТАНОВ</div>
+  <div class="splash-sub">Легенды Асура 2.0</div>
+  <div class="splash-art" id="splash-art"></div>
+  <div class="splash-menu">
+    <button class="splash-btn play" onclick="closeSplash()">▶ ИГРАТЬ</button>
+    <button class="splash-btn gray" onclick="alert('Ещё игры — скоро!')">🎮 ЕЩЁ ИГРЫ</button>
+    <button class="splash-btn gray" onclick="shareGame()">📣 ПОДЕЛИТЬСЯ С ДРУЗЬЯМИ</button>
+    <button class="splash-btn gray" onclick="openSplashSettings()">⚙ НАСТРОЙКИ</button>
+    <button class="splash-btn gray" onclick="alert('Битва Титанов — фэнтези-RPG. Сражайтесь с титанами, собирайте реликвии, качайте героя и питомца. Официальная мобильная версия.')">ℹ О ПРОГРАММЕ</button>
+  </div>
+  <div class="splash-foot">Официальная мобильная версия</div>
+</div>
 <div class="container">
   <div class="header">
     <h2>Легенды Асура 2.0</h2>
@@ -483,7 +508,14 @@ function loadGame() {
   loadLeaderboard();
   const chatEl = document.getElementById('chat-log');
   if (chatEl) chatEl.innerHTML = 'Добро пожаловать в чат! Войдите, чтобы писать.<br>';
-  switchTab('titans');
+  // Показываем стартовый экран «Битва титанов»
+  fillSplashArt();
+  const splash = document.getElementById('splash');
+  if (splash) {
+    splash.classList.remove('hidden');
+    const menuBtn = splash.querySelector('.splash-btn.play');
+    if (menuBtn) menuBtn.onclick = closeSplash;
+  }
 }
 
 // Сохранение
@@ -1474,6 +1506,80 @@ function relicBuff(type) {
     if (r && r.type === type) total += r.val;
   });
   return total;
+}
+
+// ===== Стартовый экран «Битва титанов» =====
+// Рисуем фэнтези-сцену: воительница на сокровищах, позади дракон
+function splashArtSVG() {
+  return '<svg viewBox="0 0 320 220" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">' +
+    // фон — вулканический камень с трещинами
+    '<defs><radialGradient id="sbg" cx="50%" cy="60%" r="75%"><stop offset="0%" stop-color="#2a1a0e"/><stop offset="100%" stop-color="#0d0a12"/></radialGradient>' +
+    '<radialGradient id="sglow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffb366" stop-opacity="0.9"/><stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/></radialGradient></defs>' +
+    '<rect width="320" height="220" fill="url(#sbg)"/>' +
+    // трещины с красным свечением
+    '<path d="M20 210 L60 150 L45 120 M60 150 L95 130 M85 200 L70 165" stroke="#ff4d00" stroke-width="3" fill="none" opacity="0.8"/>' +
+    '<path d="M300 30 L270 70 L280 100 M270 70 L235 80" stroke="#ff6a00" stroke-width="2.5" fill="none" opacity="0.7"/>' +
+    '<circle cx="40" cy="40" r="6" fill="#ff8a3c" opacity="0.5"/>' +
+    '<circle cx="290" cy="190" r="5" fill="#ff8a3c" opacity="0.4"/>' +
+    // тёплое свечение за фигурой
+    '<ellipse cx="160" cy="120" rx="120" ry="95" fill="url(#sglow)" opacity="0.35"/>' +
+    // груда сокровищ
+    '<ellipse cx="160" cy="185" rx="120" ry="26" fill="#6b4a1a"/>' +
+    '<circle cx="120" cy="176" r="7" fill="#ffd700"/><circle cx="205" cy="180" r="8" fill="#ffce3d"/>' +
+    '<circle cx="150" cy="188" r="6" fill="#ffb300"/><circle cx="180" cy="174" r="6" fill="#ffdf66"/>' +
+    '<rect x="78" y="160" width="34" height="22" rx="4" fill="#8b5a00" stroke="#ffd700" stroke-width="2"/>' +
+    '<rect x="238" y="166" width="30" height="20" rx="4" fill="#6b4a1a" stroke="#ffce3d" stroke-width="2"/>' +
+    // дракон за воительницей
+    '<path d="M60 120 Q30 95 48 70 Q70 92 60 120 Z" fill="#2e7d32" opacity="0.9"/>' +
+    '<path d="M260 120 Q290 95 272 70 Q250 92 260 120 Z" fill="#2e7d32" opacity="0.9"/>' +
+    '<ellipse cx="160" cy="108" rx="68" ry="34" fill="#388e3c"/>' +
+    '<path d="M160 76 L150 44 L166 70 L180 40 L172 78 Z" fill="#388e3c"/>' +
+    '<circle cx="120" cy="98" r="3" fill="#ffd700"/><circle cx="200" cy="98" r="3" fill="#ffd700"/>' +
+    // воительница — тело в золотой броне
+    '<rect x="143" y="120" width="34" height="52" rx="10" fill="#c9a227"/>' +
+    '<rect x="150" y="128" width="20" height="8" fill="#8b6a12"/>' +
+    '<rect x="134" y="128" width="13" height="30" rx="6" fill="#d4af37"/>' +
+    '<rect x="173" y="128" width="13" height="30" rx="6" fill="#d4af37"/>' +
+    '<circle cx="160" cy="108" r="13" fill="#e8b48a"/>' +
+    '<rect x="148" y="96" width="24" height="10" rx="4" fill="#c9a227"/>' +
+    '<rect x="150" y="118" width="4" height="4" fill="#3a2a10"/><rect x="166" y="118" width="4" height="4" fill="#3a2a10"/>' +
+    // меч со свечением
+    '<rect x="188" y="70" width="7" height="60" rx="3" fill="#fff7e0"/>' +
+    '<path d="M188 62 L195 62 L191.5 44 Z" fill="#fff7e0"/>' +
+    '<rect x="184" y="86" width="15" height="6" rx="2" fill="#8b6a12"/>' +
+    '<rect x="187" y="74" width="9" height="90" rx="3" fill="#ffd700" opacity="0.35"/>' +
+    '</svg>';
+}
+
+function fillSplashArt() {
+  const el = document.getElementById('splash-art');
+  if (el) el.innerHTML = splashArtSVG();
+}
+
+// Закрыть стартовый экран и показать игру (меню Битвы титанов)
+function closeSplash() {
+  document.getElementById('splash').classList.add('hidden');
+  switchTab('titans');
+}
+
+// Поделиться ссылкой на игру
+function shareGame() {
+  const url = location.origin + location.pathname;
+  if (navigator.share) {
+    navigator.share({ title: 'Битва Титанов', text: 'Заходи сражаться с титанами!', url: url }).catch(() => {});
+  } else {
+    (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject())
+      .then(() => alert('Ссылка скопирована: ' + url))
+      .catch(() => prompt('Скопируйте ссылку на игру:', url));
+  }
+}
+
+// Настройки со стартового экрана
+function openSplashSettings() {
+  closeSplash();
+  // настройки находятся на вкладке героя — включим её
+  const setRegion = document.getElementById('set-region');
+  if (setRegion) setRegion.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // Рендер главного меню «Битва титанов»
