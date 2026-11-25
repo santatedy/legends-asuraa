@@ -79,6 +79,8 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
 .hero-panel{display:flex; flex-direction:column; gap:12px;}
 .hero-top{display:flex; gap:14px; align-items:center; background:linear-gradient(135deg,rgba(40,28,80,0.85),rgba(15,10,35,0.95)); border:1px solid rgba(255,183,0,0.35); border-radius:14px; padding:14px;}
 .hero-top .hero-fig{flex-shrink:0;}
+.armor-insignia{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:8px; max-width:150px;}
+.armor-insignia span{display:inline-flex; align-items:center; gap:4px; font-size:0.72rem; font-weight:700; padding:3px 7px; border-radius:10px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.15); white-space:nowrap;}
 .hero-stats{flex:1; display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .hero-stat{display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:8px 10px;}
 .hero-stat .hs-ico{font-size:1.25rem;}
@@ -248,6 +250,7 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
     <div class="hero-panel">
       <div class="hero-top">
         <div class="hero-fig" id="hero-figure"></div>
+        <div class="armor-insignia" id="armor-insignia"></div>
         <div class="hero-stats">
           <div class="hero-stat"><span class="hs-ico">🗡</span><span><b>Сила</b><span id="hs-str">0</span></span></div>
           <div class="hero-stat"><span class="hs-ico">❤️</span><span><b>Жизнь</b><span id="hs-hp">0</span></span></div>
@@ -295,6 +298,13 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
           <option value="👸 Принцесса">👸 Принцесса</option>
           <option value="🌪 Шаман">🌪 Шаман</option>
         </select>
+        <div style="margin-top: 10px;">
+          <label style="font-size:0.8rem; opacity:0.85;">Герой</label>
+          <select id="gender-select" onchange="updateGender()">
+            <option value="m">🧑 Мужчина</option>
+            <option value="f">👩 Женщина</option>
+          </select>
+        </div>
         <div style="margin-top: 10px; display:flex; justify-content:center;" id="avatar-display"></div>
       </div>
       <div class="card">
@@ -552,6 +562,7 @@ function loadGame() {
     try { state = JSON.parse(saved); } catch (e) {}
   }
   if (!state.titans) state.titans = { beaten: [], relics: [], lastGold: 0 };
+  if (!state.gender) state.gender = 'm';
   fillBosses();
   render();
   renderPassStatus();
@@ -960,6 +971,8 @@ function render() {
   document.getElementById('stat-xp-req').innerText = state.xpReq;
   drawFighter();
   document.getElementById('clan-select').value = state.clan;
+  var gsel = document.getElementById('gender-select');
+  if (gsel) gsel.value = state.gender || 'm';
   updateClan();
   drawPet();
   renderHeroPanel();
@@ -1141,19 +1154,34 @@ const GEAR_SLOTS = [
 ];
 
 function renderHeroPanel() {
+  const best = bestOwnedRarity();
   const fig = document.getElementById('hero-figure');
   if (fig) {
-    const best = bestOwnedRarity();
     const a = best ? RARITY_COLORS[best.rarity] : RARITY_COLORS.occupy;
-    fig.innerHTML = renderFighterSVG({ fill: a[0], dark: a[1] });
+    fig.innerHTML = renderFighterSVG({ fill: a[0], dark: a[1] }, state.gender || 'm');
   }
-  // Характеристики
+  // Эмблемы купленных видов брони рядом с бойцом
+  const ins = document.getElementById('armor-insignia');
+  if (ins) {
+    const ownedIds = Object.keys(state.ownedBags || {});
+    if (ownedIds.length) {
+      ins.innerHTML = ownedIds.map(id => {
+        const it = ARMOR_ITEMS.find(x => x.id === id);
+        if (!it) return '';
+        return '<span style="color:' + it.color + '; border-color:' + it.color + ';">🛡 ' + it.name + '</span>';
+      }).join('');
+    } else {
+      ins.innerHTML = '<span style="opacity:0.5;">Броня не куплена</span>';
+    }
+  }
+  // Характеристики (броня включает бонус купленных предметов магазина)
   const luck = (state.luck != null) ? state.luck : Math.round(state.lvl * 10);
   const mana = (state.mana != null) ? state.mana : Math.round(state.lvl * 15);
+  const totalArmor = (state.armor || 0) + armorStatBonus();
   setText('hs-str', state.str);
   setText('hs-hp', state.hp);
   setText('hs-luck', luck);
-  setText('hs-armor', state.armor);
+  setText('hs-armor', totalArmor);
   setText('hs-mana', mana);
   // Снаряжение: 8 слотов
   const gear = state.heroGear || { helm: 'Нет', chest: 'Нет', weapon: 'Нет', amulet: 'Нет' };
@@ -1195,9 +1223,9 @@ function renderHeroPanel() {
   if (pfig) {
     const best2 = bestOwnedRarity();
     const a2 = best2 ? RARITY_COLORS[best2.rarity] : RARITY_COLORS.occupy;
-    pfig.innerHTML = '<div style="transform:scale(0.55); transform-origin:top left; width:220px; margin:0 -50px 0 -50px;">' + renderFighterSVG({ fill: a2[0], dark: a2[1] }) + '</div>';
+    pfig.innerHTML = '<div style="transform:scale(0.55); transform-origin:top left; width:220px; margin:0 -50px 0 -50px;">' + renderFighterSVG({ fill: a2[0], dark: a2[1] }, state.gender || 'm') + '</div>';
   }
-  const power = (state.str || 0) + (state.hp || 0) + (state.dmg || 0) * 8 + (state.armor || 0) * 5;
+  const power = (state.str || 0) + (state.hp || 0) + (state.dmg || 0) * 8 + ((state.armor || 0) + armorStatBonus()) * 5;
   setText('power-total', power.toLocaleString('ru-RU'));
   const trophy = (state.titans.beaten || []).length;
   setText('prog-trophy', trophy + ' из 3');
@@ -1246,36 +1274,65 @@ function bestOwnedRarity() {
   return best;
 }
 
-// Рисуем бойца: фигура с накладываемой бронёй. armour — {fill, dark} из RARITY_COLORS.
-function renderFighterSVG(armour) {
+// Рисуем бойца: разные слоты брони + лицо и причёска по полу.
+// armour — {fill, dark} из RARITY_COLORS, gender — 'm'|'f'
+function renderFighterSVG(armour, gender) {
   const f = armour.fill, d = armour.dark;
-  const svg = '<svg viewBox="0 0 160 200" width="150" height="188" xmlns="http://www.w3.org/2000/svg">' +
+  const g = (gender === 'f') ? 'f' : 'm';
+  const skin = '#e8b98a', hair = g === 'f' ? '#5d4037' : '#37474f';
+  const svg = '<svg viewBox="0 0 160 210" width="150" height="196" xmlns="http://www.w3.org/2000/svg">' +
     // тень
-    '<ellipse cx="80" cy="188" rx="45" ry="8" fill="rgba(0,0,0,0.4)"/>' +
+    '<ellipse cx="80" cy="198" rx="45" ry="8" fill="rgba(0,0,0,0.4)"/>' +
+    // сапоги (броня)
+    '<rect x="62" y="178" width="16" height="18" rx="5" fill="' + d + '"/>' +
+    '<rect x="82" y="178" width="16" height="18" rx="5" fill="' + d + '"/>' +
     // ноги (тёмные штаны)
-    '<rect x="64" y="130" width="14" height="50" rx="6" fill="#263238"/>' +
-    '<rect x="82" y="130" width="14" height="50" rx="6" fill="#263238"/>' +
-    // торс — броня
-    '<path d="M62 70 L50 95 Q50 130 68 140 L92 140 Q110 130 110 95 L98 70 Z" fill="' + f + '"/>' +
-    '<path d="M62 70 L50 95 L110 95 L98 70 Z" fill="' + d + '" opacity="0.5"/>' +
+    '<rect x="64" y="140" width="14" height="42" rx="6" fill="#263238"/>' +
+    '<rect x="82" y="140" width="14" height="42" rx="6" fill="#263238"/>' +
+    // набедренники (пластины по бокам ног)
+    '<rect x="58" y="138" width="8" height="40" rx="4" fill="' + f + '"/>' +
+    '<rect x="94" y="138" width="8" height="40" rx="4" fill="' + f + '"/>' +
+    // торс — нагрудник с пластинами
+    '<path d="M62 74 L50 100 Q48 136 68 146 L92 146 Q112 136 110 100 L98 74 Z" fill="' + f + '"/>' +
+    '<path d="M62 74 L50 100 L110 100 L98 74 Z" fill="' + d + '" opacity="0.5"/>' +
+    '<rect x="62" y="92" width="36" height="4" rx="2" fill="' + d + '" opacity="0.6"/>' +
+    '<rect x="66" y="112" width="28" height="4" rx="2" fill="' + d + '" opacity="0.6"/>' +
     // пояс
-    '<rect x="52" y="120" width="56" height="10" rx="3" fill="' + d + '"/>' +
-    // руки (плечи-рукава)
-    '<rect x="42" y="74" width="16" height="40" rx="8" fill="' + f + '"/>' +
-    '<rect x="102" y="74" width="16" height="40" rx="8" fill="' + f + '"/>' +
-    '<circle cx="50" cy="118" r="7" fill="#424242"/>' +
-    '<circle cx="110" cy="118" r="7" fill="#424242"/>' +
-    // голова в шлеме
-    '<circle cx="80" cy="48" r="22" fill="' + d + '"/>' +
-    '<rect x="60" y="38" width="40" height="20" rx="9" fill="' + f + '"/>' +
-    // забрало
-    '<rect x="70" y="46" width="20" height="12" rx="4" fill="#263238"/>' +
-    // щит/нашлемный гребень
-    '<path d="M80 24 L84 34 L76 34 Z" fill="' + f + '"/>' +
+    '<rect x="52" y="128" width="56" height="11" rx="3" fill="' + d + '"/>' +
+    '<circle cx="80" cy="133" r="4" fill="#fbc02d"/>' +
+    // руки
+    '<rect x="40" y="78" width="16" height="46" rx="8" fill="#4e342e"/>' +
+    '<rect x="104" y="78" width="16" height="46" rx="8" fill="#4e342e"/>' +
+    // перчатки
+    '<circle cx="48" cy="126" r="7" fill="' + d + '"/>' +
+    '<circle cx="112" cy="126" r="7" fill="' + d + '"/>' +
+    // наплечники (массивные округлые)
+    '<path d="M36 72 Q36 56 52 58 L62 70 Q52 78 44 78 Z" fill="' + d + '"/>' +
+    '<path d="M124 72 Q124 56 108 58 L98 70 Q108 78 116 78 Z" fill="' + d + '"/>' +
+    '<circle cx="44" cy="70" r="9" fill="' + f + '"/>' +
+    '<circle cx="116" cy="70" r="9" fill="' + f + '"/>' +
+    // шея
+    '<rect x="73" y="46" width="14" height="14" rx="4" fill="' + skin + '"/>' +
+    // лицо
+    '<circle cx="80" cy="44" r="20" fill="' + skin + '"/>' +
+    // глаза
+    '<circle cx="73" cy="42" r="3" fill="#212121"/><circle cx="87" cy="42" r="3" fill="#212121"/>' +
+    // брови
+    '<path d="M68 34 L77 36 M92 34 L83 36" stroke="#212121" stroke-width="2" stroke-linecap="round" fill="none"/>' +
+    // рот
+    '<path d="M75 51 L85 49" stroke="#b1531f" stroke-width="2" stroke-linecap="round"/>' +
+    // причёска (по полу)
+    (g === 'f'
+      ? '<path d="M60 44 Q58 18 80 16 Q102 18 100 44 Q100 30 88 28 Q80 34 72 30 Q60 32 60 44 Z" fill="' + hair + '"/>' +
+        '<path d="M72 40 Q64 66 56 78 L66 80 Q74 58 76 42 Z" fill="' + hair + '"/>'
+      : '<path d="M60 38 Q60 18 80 18 Q100 18 100 38 Q100 24 88 24 Q80 28 72 24 Q60 26 60 38 Z" fill="' + hair + '"/>') +
+    // шлем: обод + гребень на макушке
+    '<path d="M60 28 Q80 6 100 28 L94 20 Q80 12 66 20 Z" fill="' + d + '"/>' +
+    '<path d="M80 8 L86 20 L74 20 Z" fill="' + f + '"/>' +
     // меч в правой руке
-    '<rect x="106" y="40" width="6" height="70" rx="2" fill="#e0e0e0"/>' +
-    '<path d="M104 32 L114 32 L109 16 Z" fill="#e0e0e0"/>' +
-    '<rect x="102" y="52" width="14" height="6" rx="2" fill="' + d + '"/>' +
+    '<rect x="110" y="36" width="6" height="76" rx="2" fill="#cfd8dc"/>' +
+    '<path d="M108 28 L118 28 L113 12 Z" fill="#cfd8dc"/>' +
+    '<rect x="106" y="50" width="14" height="6" rx="2" fill="' + d + '"/>' +
     '</svg>';
   return svg;
 }
@@ -1286,7 +1343,7 @@ function drawFighter(el) {
   if (!el) return;
   const best = bestOwnedRarity();
   const armour = best ? RARITY_COLORS[best.rarity] : RARITY_COLORS.occupy;
-  el.innerHTML = renderFighterSVG({ fill: armour[0], dark: armour[1] });
+  el.innerHTML = renderFighterSVG({ fill: armour[0], dark: armour[1] }, state.gender || 'm');
 }
 
 // Для баннера приветствия — рисует бойца поверх эмодзи-фона.
@@ -1303,6 +1360,14 @@ function updateAvatar() {
   state.avatar = document.getElementById('avatar-select').value;
   drawFighter();
   log('Вы сменили аватарку на: ' + state.avatar);
+}
+
+function updateGender() {
+  state.gender = document.getElementById('gender-select').value;
+  saveGame();
+  drawFighter();
+  renderHeroPanel();
+  log('Герой: ' + (state.gender === 'f' ? 'Женщина' : 'Мужчина'));
 }
 
 // Настройки профиля — персональные данные аккаунта
