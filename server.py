@@ -366,6 +366,12 @@ class Handler(BaseHTTPRequestHandler):
             ct = "application/javascript; charset=utf-8"
         elif fp.endswith(".css"):
             ct = "text/css; charset=utf-8"
+        elif fp.endswith(".json"):
+            ct = "application/json; charset=utf-8"
+        elif fp.endswith(".png"):
+            ct = "image/png"
+        elif fp.endswith(".ico"):
+            ct = "image/x-icon"
         with open(fp, "rb") as f:
             body = f.read()
         self.send_response(200)
