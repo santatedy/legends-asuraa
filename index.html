@@ -1481,30 +1481,35 @@ function renderTitansMenu() {
   const el = document.getElementById('titans-menu');
   if (!el) return;
   const items = [
-    ['Поход', '⚔️', 'renderTitansGo()', 'Сразиться с титанами и добыть реликвии'],
-    ['Мой герой', '🛡️', 'switchTab(\'hero\')', 'Профиль, броня и награды'],
-    ['Питомец', '🐾', 'switchTab(\'pet\')', 'Ваш верный спутник'],
-    ['Боссы', '🐉', 'switchTab(\'boss\')', 'Испытания боссов, награды'],
+    ['Арена', '⚔️', 'titanArena()', 'Победите всех соперников и станьте чемпионом'],
+    ['Дуэли', '🗡️', 'titanDuel()', 'Быстрый бой 1 на 1 против NPC'],
+    ['Пещера', '⛏️', 'switchTab(\'cave\')', 'Добыча ресурсов и руды'],
+    ['Хижина мудреца', '🔮', 'titanSage()', 'Советы мудреца и пророчества'],
+    ['Долина бессмертных', '🏔️', 'titanValley()', '<9 часов до открытия'],
     ['Сражения', '🤺', 'titanPlaceholder(\'Сражения\')', 'Будущий режим сражений'],
     ['Колизей', '🏟️', 'titanPlaceholder(\'Колизей\')', 'Арена для дуэлей'],
-    ['Пещеры', '⛏️', 'switchTab(\'cave\')', 'Добыча ресурсов'],
-    ['Крафт', '🔨', 'switchTab(\'craft\')', 'Создание снаряжения'],
-    ['Таланты', '🌟', 'switchTab(\'talent\')', 'Качать свои способности'],
-    ['Магазин брони', '🛒', 'switchTab(\'shop\')', 'Купить лучшую броню'],
-    ['Чат', '💬', 'switchTab(\'chat\')', 'Общение с игроками'],
-    ['Бой (PvP)', '🗡️', 'switchTab(\'pvp\')', 'Сразиться с игроком'],
+    ['Поход', '⚔️', 'renderTitansGo()', 'Сразиться с титанами и добыть реликвии'],
+    ['Получить золото', '💰', 'titanGetGold()', 'Бесплатное золото, раз в 5 мин'],
+    ['Магазин снаряжения', '🛒', 'switchTab(\'shop\')', 'Купить лучшую броню'],
+    ['Кузница', '🔨', 'titanForge()', 'Руны, заточка, звёзды, бонус'],
+    ['Лаборатория', '🧪', 'titanLab()', 'Усиления, эликсиры, камни и травы'],
     ['Рейтинг', '🏆', 'loadLeaderboard()', 'Таблица лидеров'],
-    ['Получить золото', '💰', 'titanGetGold()', 'Бесплатное золото, раз в 5 мин']
+    ['Мой герой', '🛡️', 'switchTab(\'hero\')', 'Профиль и броня'],
+    ['Мой клан', '🏅', 'switchTab(\'leaders\')', 'Ваш клан'],
+    ['На главную', '🏠', 'switchTab(\'hero\')', 'Вернуться в игру']
   ];
   const relicCount = (state.titans.relics || []).length;
+  const valleyUnlock = valleyTimeLeft();
   let html = '<div class="titans-wrap">' +
     '<div class="titans-title"><h3>⚡ БИТВА ТИТАНОВ</h3><small>Древние титаны ждут своего вызова</small>' +
     '<div class="titans-metrics" style="margin-top:8px;"><span>💎 Реликвий: ' + relicCount + '</span><span>⚡ Энергия: ' + state.energy + '</span></div></div>' +
     '<div class="tt-menu">';
   items.forEach(it => {
+    // У пункта «Долина бессмертных» подпись таймера обновляется
+    const desc = (it[0] === 'Долина бессмертных') ? valleyUnlock : it[3];
     html += '<button class="tt-item" onclick="' + it[2] + '">' +
       '<span class="tt-ico">' + it[1] + '</span>' +
-      '<span style="display:flex; flex-direction:column;"><b>' + it[0] + '</b><small>' + it[3] + '</small></span>' +
+      '<span style="display:flex; flex-direction:column;"><b>' + it[0] + '</b><small>' + desc + '</small></span>' +
       '<span class="arrow">›</span></button>';
   });
   html += '</div><button class="btn tt-back" onclick="switchTab(\'hero\')">← Назад в игру</button></div>';
@@ -1527,6 +1532,173 @@ function titanGetGold() {
     alert('⏳ Ещё можно будет получить золото через ' + left + ' мин.');
   }
   render(); renderTitansMenu();
+}
+
+// Долина бессмертных: таймер до открытия (< 9 часов от первого запуска)
+function valleyUnlockTime() {
+  if (!state.titans.valleyUnlock) state.titans.valleyUnlock = Date.now() + 9 * 3600 * 1000;
+  return state.titans.valleyUnlock;
+}
+function valleyTimeLeft() {
+  const diff = Math.max(0, valleyUnlockTime() - Date.now());
+  if (diff <= 0) return 'Открыто!';
+  const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000);
+  return '<' + h + ' ч ' + m + ' мин до открытия';
+}
+
+// Арена: побеждайте соперников подряд (симуляция), награда растёт с серией
+function titanArena() {
+  const el = document.getElementById('titans-menu');
+  if (!el) return;
+  if (!state.titans.arenaWins) state.titans.arenaWins = 0;
+  const wins = state.titans.arenaWins;
+  const enemy = 60 + wins * 15;
+  const myPwr = state.str + state.dmg * 5;
+  let lines = '';
+  let win = myPwr >= enemy;
+  lines += '⚔️ Соперник (сила ' + enemy + ') против вашей (' + myPwr + ')<br>';
+  if (win) {
+    const gold = 50 + wins * 25;
+    state.titans.arenaWins = wins + 1;
+    state.gold += gold;
+    lines += '🏆 Победа! Серия: ' + state.titans.arenaWins + '<br>💰 Награда: +' + gold + ' золота';
+  } else {
+    lines += '💀 Поражение. Серия сброшена.';
+    state.titans.arenaWins = 0;
+  }
+  render();
+  el.innerHTML =
+    '<div class="titans-wrap">' +
+    '<div class="titans-title"><h3>⚔ А Р Е Н А</h3><small>Серия побед: <b style="color:#ffd54f;">' + state.titans.arenaWins + '</b></small></div>' +
+    '<div class="tt-log">' + lines + '</div>' +
+    '<button class="btn btn-primary" style="width:100%;" onclick="titanArena()">⚔ Сразиться дальше</button>' +
+    '<button class="btn" style="width:100%; margin-top:6px;" onclick="renderTitansMenu()">← В меню</button></div>';
+}
+
+// Дуэль 1 на 1 против NPC
+function titanDuel() {
+  const el = document.getElementById('titans-menu');
+  if (!el) return;
+  let playerHp = state.hp, enemyHp = 150;
+  const dmg = state.dmg, eDmg = 18;
+  let logHtml = '';
+  let win = true;
+  for (let i = 0; i < 20 && playerHp > 0 && enemyHp > 0; i++) {
+    enemyHp -= dmg;
+    logHtml += '🗡 Вы: ' + dmg + ' → враг ' + Math.max(0, enemyHp) + ' HP<br>';
+    if (enemyHp <= 0) break;
+    playerHp -= eDmg;
+    logHtml += '💢 Враг: ' + eDmg + ' → вы ' + Math.max(0, playerHp) + ' HP<br>';
+  }
+  if (enemyHp <= 0) { state.gold += 40; state.xp += 30; win = true; }
+  else { win = false; }
+  checkLevelUp();
+  render();
+  el.innerHTML =
+    '<div class="titans-wrap">' +
+    '<div class="titans-title"><h3>🗡 Д У Э Л Ь</h3><small>' + (win ? 'Вы победили в дуэли!' : 'Враг оказался сильнее.') + '</small></div>' +
+    '<div class="tt-log">' + logHtml + '</div>' +
+    (win ? '<div style="text-align:center; color:#ffd54f; font-weight:800;">💰 +40 золота • ✨ +30 опыта</div>' : '') +
+    '<button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="titanDuel()">⚔ Новая дуэль</button>' +
+    '<button class="btn" style="width:100%; margin-top:6px;" onclick="renderTitansMenu()">← В меню</button></div>';
+}
+
+// Хижина мудреца: совет + бесплатный бонус раз в 10 минут
+function titanSage() {
+  const el = document.getElementById('titans-menu');
+  if (!el) return;
+  const now = Date.now();
+  const last = state.titans.lastSage || 0;
+  const advice = ['Копить золото перед походом за титанами — там лучшие награды.',
+    'Прокачивайте таланты: крит и усиление брони окупаются в долгих боях.',
+    'Сражайтесь с титанами: каждая победа даёт реликвию с бонусом.',
+    'Арена награждает за серию побед — не прерывайте её.',
+    'Заточка оружия (Кузница) сильно повышает урон в PvP.'][Math.floor(Math.random() * 5)];
+  let bonus = '';
+  if (now - last >= 10 * 60 * 1000) {
+    state.titans.lastSage = now;
+    state.silver += 20;
+    bonus = '🎁 Бонус мудреца: +20 серебра! (раз в 10 мин)';
+    render();
+  } else {
+    bonus = '⏳ Приходите за бонусом через несколько минут.';
+  }
+  el.innerHTML =
+    '<div class="titans-wrap">' +
+    '<div class="titans-title"><h3>🔮 ХИЖИНА МУДРЕЦА</h3><small>Старик делится пророчествами</small></div>' +
+    '<div class="tt-log">💬 «' + advice + '»</div>' +
+    '<div style="text-align:center;">' + bonus + '</div>' +
+    '<button class="btn" style="width:100%; margin-top:8px;" onclick="renderTitansMenu()">← В меню</button></div>';
+}
+
+// Долина бессмертных: заблокирована таймером
+function titanValley() {
+  const el = document.getElementById('titans-menu');
+  if (!el) return;
+  const diff = valleyUnlockTime() - Date.now();
+  if (diff > 0) {
+    el.innerHTML =
+      '<div class="titans-wrap">' +
+      '<div class="titans-title"><h3>🏔 ДОЛИНА БЕССМЕРТНЫХ</h3><small>Место древних сокровищ</small></div>' +
+      '<div class="tt-log">🔒 Долина ещё закрыта.<br>' + valleyTimeLeft() + '</div>' +
+      '<button class="btn" style="width:100%; margin-top:8px;" onclick="renderTitansMenu()">← В меню</button></div>';
+    return;
+  }
+  const gold = 200;
+  state.gold += gold;
+  render();
+  el.innerHTML =
+    '<div class="titans-wrap">' +
+    '<div class="titans-title"><h3>🏔 ДОЛИНА БЕССМЕРТНЫХ</h3><small>Сокровища найдены!</small></div>' +
+    '<div class="tt-log">💰 Вы нашли ' + gold + ' золота в долине.</div>' +
+    '<button class="btn" style="width:100%; margin-top:8px;" onclick="renderTitansMenu()">← В меню</button></div>';
+}
+
+// Кузница: заточка оружия за золото
+function titanForge() {
+  const el = document.getElementById('titans-menu');
+  if (!el) return;
+  if (!state.titans.forge) state.titans.forge = 0;
+  const cost = 100 + state.titans.forge * 50;
+  let out = '⚒ Текущая заточка: <b>+' + state.titans.forge + '</b> к урону.';
+  if (state.gold >= cost) {
+    state.gold -= cost;
+    state.titans.forge++;
+    out += '<br>✨ Заточка повышена до <b>+' + state.titans.forge + '</b>!';
+    render();
+  } else {
+    out += '<br>❌ Недостаточно золота (нужно ' + cost + ').';
+  }
+  el.innerHTML =
+    '<div class="titans-wrap">' +
+    '<div class="titans-title"><h3>🔨 КУЗНИЦА</h3><small>Руны, заточка и звёзды</small></div>' +
+    '<div class="tt-log">' + out + '</div>' +
+    '<button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="titanForge()">⚒ Заточить за ' + cost + ' 💰</button>' +
+    '<button class="btn" style="width:100%; margin-top:6px;" onclick="renderTitansMenu()">← В меню</button></div>';
+}
+
+// Лаборатория: эликсир за серебро даёт временный бонус
+function titanLab() {
+  const el = document.getElementById('titans-menu');
+  if (!el) return;
+  if (!state.titans.elixir) state.titans.elixir = 0;
+  const cost = 30;
+  let out = '🧪 Эликсиров выпито: <b>' + state.titans.elixir + '</b>.';
+  if (state.silver >= cost) {
+    state.silver -= cost;
+    state.titans.elixir++;
+    state.str = Math.floor(state.str * 1.02);
+    out += '<br>✨ Эликсир выпит! Сила выросла на 2%.';
+    render();
+  } else {
+    out += '<br>❌ Нужно ' + cost + ' серебра.';
+  }
+  el.innerHTML =
+    '<div class="titans-wrap">' +
+    '<div class="titans-title"><h3>🧪 ЛАБОРАТОРИЯ</h3><small>Эликсиры и усиления</small></div>' +
+    '<div class="tt-log">' + out + '</div>' +
+    '<button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="titanLab()">🧪 Выпить эликсир за ' + cost + ' 🪙</button>' +
+    '<button class="btn" style="width:100%; margin-top:6px;" onclick="renderTitansMenu()">← В меню</button></div>';
 }
 
 // --- Экран меню «Поход» ---
