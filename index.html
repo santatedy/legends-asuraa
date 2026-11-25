@@ -46,6 +46,35 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
 .talent{background: rgba(255,214,0,0.15); padding: 8px; border-radius: 6px; border: 1px solid var(--y); cursor: pointer;}
 .talent.unlocked{background: rgba(255,214,0,0.4); border-color: var(--y);}
 @media (max-width: 500px){.grid-3{grid-template-columns: 1fr;}.header{flex-direction: column; gap: 8px;}}
+/* === Битва титанов: тёмный фэнтези-интерфейс === */
+.titans-wrap{display:flex; flex-direction:column; gap:10px;}
+.titans-title{background:linear-gradient(135deg, rgba(255,183,0,0.22), rgba(120,50,0,0.25)); border:1px solid rgba(255,183,0,0.45); border-radius:12px; padding:14px 16px; text-align:center; box-shadow:0 0 18px rgba(255,183,0,0.15);}
+.titans-title h3{margin:0 0 4px 0; font-size:1.4rem; letter-spacing:2px; color:#ffd54f; text-shadow:0 0 12px rgba(255,183,0,0.6);}
+.titans-title small{color:var(--t);}
+.titans-metrics{display:flex; justify-content:center; gap:16px; flex-wrap:wrap; font-size:0.9rem;}
+.titans-metrics span{background:rgba(0,0,0,0.5); padding:5px 12px; border-radius:14px; border:1px solid rgba(255,255,255,0.15);}
+.tt-menu{display:grid; grid-template-columns:1fr; gap:8px;}
+.tt-item{position:relative; display:flex; align-items:center; gap:12px; width:100%; background:linear-gradient(135deg, rgba(74,45,125,0.5), rgba(20,12,40,0.8)); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px 14px; cursor:pointer; transition:all .15s; text-align:left; color:var(--s);}
+.tt-item:hover{transform:translateY(-2px); border-color:rgba(255,183,0,0.5); box-shadow:0 4px 16px rgba(255,183,0,0.18);}
+.tt-item .tt-ico{font-size:1.6rem; width:46px; height:46px; display:flex; align-items:center; justify-content:center; background:rgba(255,183,0,0.12); border:1px solid rgba(255,183,0,0.35); border-radius:10px; flex-shrink:0;}
+.tt-item b{font-size:1.02rem; color:#fff;}
+.tt-item small{color:var(--t); font-weight:400;}
+.tt-item .arrow{margin-left:auto; color:rgba(255,183,0,0.7); font-size:1.2rem;}
+.tt-back{width:100%; margin-bottom:10px;}
+.tt-fights{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;}
+.tt-fight{display:flex; align-items:center; gap:12px; background:linear-gradient(135deg, rgba(40,20,60,0.7), rgba(10,8,25,0.9)); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 14px;}
+.tt-fight .tt-ico{font-size:1.7rem; width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:rgba(255,183,0,0.12); border:1px solid rgba(255,183,0,0.35); border-radius:12px;}
+.tt-fight b{color:#fff;}
+.tt-fight small{color:var(--t);}
+.tt-beaten{color:#81c784; font-weight:700; margin-left:auto;}
+.tt-res{text-align:center; padding:16px 8px;}
+.tt-res .tt-badge{font-size:4rem; margin:8px 0; filter:drop-shadow(0 0 16px rgba(255,183,0,0.5));}
+.tt-res h2{font-size:2rem; margin:6px 0; letter-spacing:2px;}
+.tt-res h2.win{color:#ffd54f; text-shadow:0 0 18px rgba(255,183,0,0.7);}
+.tt-res h2.lose{color:#ef5350; text-shadow:0 0 18px rgba(239,83,80,0.6);}
+.tt-relic{display:inline-block; background:linear-gradient(135deg, rgba(255,183,0,0.25), rgba(180,90,0,0.25)); border:1px solid rgba(255,183,0,0.6); border-radius:10px; padding:8px 14px; color:#ffd54f; font-weight:700; margin:8px 0; box-shadow:0 0 14px rgba(255,183,0,0.3);}
+.tt-log{background:rgba(0,0,0,0.55); border:1px solid #333; border-radius:10px; padding:10px; font-family:monospace; font-size:0.82rem; max-height:150px; overflow-y:auto; margin:10px 0; text-align:left; color:#e0e0e0;}
+.tt-btn-gold{background:linear-gradient(135deg,#ffb300,#f57f17); color:#1a1a1a; font-weight:800; border:none;}
 </style>
 </head>
 <body>
@@ -1336,28 +1365,19 @@ function renderTitansMenu() {
     ['Мой клан', '🏅', 'switchTab("leaders")', 'Ваш клан'],
     ['На главную', '🏠', 'switchTab("hero")', 'Вернуться в игру']
   ];
-  let html = '';
+  const relicCount = (state.titans.relics || []).length;
+  let html = '<div class="titans-wrap">' +
+    '<div class="titans-title"><h3>⚡ БИТВА ТИТАНОВ</h3><small>Древние титаны ждут своего вызова</small>' +
+    '<div class="titans-metrics" style="margin-top:8px;"><span>💎 Реликвий: ' + relicCount + '</span><span>⚡ Энергия: ' + state.energy + '</span></div></div>' +
+    '<div class="tt-menu">';
   items.forEach(it => {
-    html += '<button class="btn" style="width:100%; margin-bottom:6px; display:flex; align-items:center; gap:10px; justify-content:flex-start;">' +
-      '<span style="font-size:1.3rem;">' + it[1] + '</span>' +
-      '<span style="display:flex; flex-direction:column; align-items:flex-start;">' +
-      '<b>' + it[0] + '</b><small style="color:var(--t); font-weight:400;">' + it[3] + '</small>' +
-      '</span></button>';
+    html += '<button class="tt-item" onclick="' + it[2] + '">' +
+      '<span class="tt-ico">' + it[1] + '</span>' +
+      '<span style="display:flex; flex-direction:column;"><b>' + it[0] + '</b><small>' + it[3] + '</small></span>' +
+      '<span class="arrow">›</span></button>';
   });
-  el.innerHTML = '<button class="btn" onclick="switchTab(\'hero\')" style="margin-bottom:10px;">← Назад</button>' + html;
-  // ставим обработчики по порядку
-  const items2 = el.querySelectorAll('button');
-  items2[1].onclick = () => renderTitansGo();
-  items2[2].onclick = () => titanPlaceholder('Сражения');
-  items2[3].onclick = () => titanPlaceholder('Колизей');
-  items2[4].onclick = () => titanGetGold();
-  items2[5].onclick = () => titanPlaceholder('Магазин снаряжения');
-  items2[6].onclick = () => titanPlaceholder('Кузница');
-  items2[7].onclick = () => titanPlaceholder('Лаборатория');
-  items2[8].onclick = () => loadLeaderboard();
-  items2[9].onclick = () => switchTab('hero');
-  items2[10].onclick = () => switchTab('leaders');
-  items2[11].onclick = () => switchTab('hero');
+  html += '</div><button class="btn tt-back" onclick="switchTab(\'hero\')">← Назад в игру</button></div>';
+  el.innerHTML = html;
 }
 
 function titanPlaceholder(name) {
@@ -1383,24 +1403,29 @@ function renderTitansGo() {
   const el = document.getElementById('titans-menu');
   const owned = state.ownedBags || {};
   const relicCount = (state.titans.relics || []).length;
+  const beatenCount = (state.titans.beaten || []).length;
   let list = '';
   TITANS.forEach(t => {
     const beaten = (state.titans.beaten || []).includes(t.id);
-    list += '<div class="card" style="margin-bottom:8px; padding:10px;">' +
-      '<div style="display:flex; align-items:center; gap:10px; justify-content:space-between;">' +
-      '<div style="display:flex; align-items:center; gap:8px;">' +
-      '<span style="font-size:1.6rem;">' + t.icon + '</span>' +
-      '<span><b>' + t.name + '</b><br><small>HP ' + t.hp + ' • Ур. ' + t.lvl + '</small></span>' +
-      '</div>' +
-      (beaten ? '<b style="color:#4caf50;">✔ Побеждён</b>' : '<button class="btn btn-primary btn-sm" onclick="titanFight(\'' + t.id + '\')">Сразиться</button>') +
-      '</div></div>';
+    list += '<li class="tt-fight">' +
+      '<span class="tt-ico">' + t.icon + '</span>' +
+      '<span style="display:flex; flex-direction:column;">' +
+      '<b>' + t.name + '</b>' +
+      '<small>HP ' + t.hp + ' • Ур. ' + t.lvl + ' • Награда: ' + t.gold[1] + '💰</small>' +
+      '</span>' +
+      (beaten
+        ? '<span class="tt-beaten">✔ Побеждён</span>'
+        : '<button class="btn btn-primary" style="margin-left:auto;" onclick="titanFight(\'' + t.id + '\')">⚔ Сразиться</button>') +
+      '</li>';
   });
   el.innerHTML =
-    '<button class="btn" onclick="renderTitansMenu()" style="margin-bottom:10px;">← Меню</button>' +
-    '<p style="font-size:0.95rem;">⚡ Меню похода</p>' +
-    '<p style="font-size:0.85rem;">💎 Реликвий собрано: <b>' + relicCount + '</b> • Энергия: <b>' + state.energy + '</b>/' + state.maxEnergy + '</p>' +
-    list +
-    '<button class="btn" onclick="renderTitansMenu()" style="margin-top:6px; width:100%;">Вернуться в поход</button>';
+    '<div class="titans-wrap">' +
+    '<button class="btn tt-back" onclick="renderTitansMenu()">← Меню</button>' +
+    '<div class="titans-title"><h3>⚔ П О Х О Д</h3><small>Выберите титана для сражения</small>' +
+    '<div class="titans-metrics" style="margin-top:8px;"><span>💎 Реликвий: ' + relicCount + '</span><span>⚡ Энергия: ' + state.energy + '/' + state.maxEnergy + '</span><span>🏆 Побеждено: ' + beatenCount + '/' + TITANS.length + '</span></div></div>' +
+    '<ul class="tt-fights">' + list + '</ul>' +
+    '<button class="btn" onclick="renderTitansMenu()" style="margin-top:6px; width:100%;">Вернуться в меню</button>' +
+    '</div>';
 }
 
 // Бой с титаном: симулируем, выдаём реликвию при победе
@@ -1450,19 +1475,18 @@ function titanFight(id) {
 function renderTitansResult(win, icon, gold, xp, relicHtml, combatLog) {
   const el = document.getElementById('titans-menu');
   el.innerHTML =
-    '<div style="text-align:center; padding:14px;">' +
-    '<div style="font-size:1.3rem; margin-bottom:6px;">⚡ Битва титанов</div>' +
-    '<div style="font-size:3rem; margin:10px 0;">' + icon + '</div>' +
+    '<div class="titans-wrap">' +
+    '<div class="titans-title" style="margin-bottom:6px;"><h3>⚡ БИТВА ТИТАНОВ</h3><small>' + (win ? 'Титан повержен!' : 'Титан оказался сильнее...') + '</small></div>' +
+    '<div class="tt-res">' +
+    '<div class="tt-badge">' + icon + '</div>' +
+    '<h2 class="' + (win ? 'win' : 'lose') + '">' + (win ? 'Победа!' : 'Поражение') + '</h2>' +
     (win
-      ? '<h2 style="color:#ffd54f; margin:6px 0;">Победа!</h2>'
-      : '<h2 style="color:#ef5350; margin:6px 0;">Поражение</h2>') +
-    (win
-      ? '<div style="font-size:1rem; margin:8px 0;">Награда: ' + (relicHtml || ('Золото +' + gold + ' • Опыт +' + xp)) + '</div>'
-      : '<div style="font-size:0.95rem; margin:8px 0;">Вы потеряли 10% золота.</div>') +
-    '<div class="log" style="max-height:140px; overflow:auto; text-align:left; margin:10px 0;">' + combatLog + '</div>' +
-    '<button class="btn btn-primary" style="width:100%; margin-top:6px;" onclick="renderTitansGo()">Вернуться в поход</button>' +
+      ? '<div style="font-size:1rem; margin:8px 0;">' + (relicHtml ? '<div class="tt-relic">' + relicHtml + '</div>' : ('Награда: Золото +<b style="color:#ffd54f;">' + gold + '</b> • Опыт +<b style="color:#9ccc65;">' + xp + '</b>')) + '</div>'
+      : '<div style="font-size:0.95rem; margin:8px 0; color:#ef9a9a;">Вы потеряли 10% золота.</div>') +
+    '<div class="tt-log">' + combatLog + '</div>' +
+    '<button class="btn btn-primary" style="width:100%; margin-top:6px;" onclick="renderTitansGo()">⚔ Вернуться в поход</button>' +
     '<button class="btn" style="width:100%; margin-top:6px;" onclick="renderTitansMenu()">В меню</button>' +
-    '</div>';
+    '</div></div>';
 }
 
 // --- Магазин брони ---
