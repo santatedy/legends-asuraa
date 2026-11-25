@@ -109,9 +109,22 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
 .splash-btn.play{background:linear-gradient(135deg,#1d4e63,#0e2a38); box-shadow:0 4px 16px rgba(30,90,120,0.4);}
 .splash-btn.gray{background:rgba(70,74,90,0.9);}
 .splash-foot{text-align:center; color:#9aa0b0; font-size:0.8rem; margin:18px 0 8px;}
+/* === Экран загрузки === */
+#loader-screen{position:fixed; inset:0; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; background:#0a0a12;}
+#loader-screen.hidden{display:none;}
+.loader-logo{width:200px; height:200px; animation:pulse 1.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+.loader-bar{width:72%; max-width:340px; height:16px; border:2px solid #c9a227; border-radius:10px; padding:2px; box-shadow:0 0 14px rgba(255,183,0,0.4);}
+.loader-fill{height:100%; width:0%; border-radius:7px; background:linear-gradient(90deg,#ffb300,#ff8a00); transition:width 0.2s linear;}
+.loader-text{color:#c9a227; font-size:1.2rem; font-weight:700; letter-spacing:2px; text-shadow:0 0 12px rgba(255,183,0,0.6); font-family:Georgia,'Times New Roman',serif;}
 </style>
 </head>
 <body>
+<div id="loader-screen">
+  <div class="loader-logo" id="loader-logo"></div>
+  <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
+  <div class="loader-text">Загрузка игры...</div>
+</div>
 <div id="splash">
   <div class="splash-title">⚡ БИТВА ТИТАНОВ</div>
   <div class="splash-sub">Легенды Асура 2.0</div>
@@ -508,9 +521,35 @@ function loadGame() {
   loadLeaderboard();
   const chatEl = document.getElementById('chat-log');
   if (chatEl) chatEl.innerHTML = 'Добро пожаловать в чат! Войдите, чтобы писать.<br>';
-  // Показываем стартовый экран «Битва титанов»
+  // Показываем экран загрузки, затем — стартовый экран «Битва титанов»
   fillSplashArt();
+  fillLoaderLogo();
+  runLoader();
+}
+
+// Анимация загрузки: заполняем полосу прогресса и открываем стартовый экран
+function runLoader() {
+  const loader = document.getElementById('loader-screen');
+  const fill = document.getElementById('loader-fill');
   const splash = document.getElementById('splash');
+  if (!loader) { openSplash(); return; }
+  loader.classList.remove('hidden');
+  splash.classList.add('hidden');
+  let progress = 0;
+  const timer = setInterval(function () {
+    progress += Math.random() * 16 + 8;
+    if (fill) fill.style.width = Math.min(progress, 100) + '%';
+    if (progress >= 100) {
+      clearInterval(timer);
+      setTimeout(openSplash, 350);
+    }
+  }, 120);
+}
+
+function openSplash() {
+  const loader = document.getElementById('loader-screen');
+  const splash = document.getElementById('splash');
+  if (loader) loader.classList.add('hidden');
   if (splash) {
     splash.classList.remove('hidden');
     const menuBtn = splash.querySelector('.splash-btn.play');
@@ -1554,6 +1593,48 @@ function splashArtSVG() {
 function fillSplashArt() {
   const el = document.getElementById('splash-art');
   if (el) el.innerHTML = splashArtSVG();
+}
+
+// Эмблема: круглый золотой медальон с двумя скрещёнными светящимися клинками
+function loaderLogoSVG() {
+  return '<svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs>' +
+    '<radialGradient id="lbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#3a1808"/><stop offset="100%" stop-color="#170a05"/></radialGradient>' +
+    '<radialGradient id="lblade" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#d0e8ff"/><stop offset="70%" stop-color="#7cc0ff"/><stop offset="100%" stop-color="#3a86d0"/></radialGradient>' +
+    '<radialGradient id="lfired" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffb300" stop-opacity="0.9"/><stop offset="100%" stop-color="#ff4d00" stop-opacity="0"/></radialGradient>' +
+    '</defs>' +
+    // фон за медальоном
+    '<circle cx="100" cy="100" r="92" fill="url(#lbg)"/>' +
+    // лава/огонь за клинками
+    '<circle cx="100" cy="100" r="62" fill="url(#lfired)" opacity="0.85"/>' +
+    // золотой обод с шипами
+    '<circle cx="100" cy="100" r="88" fill="none" stroke="#e0b63f" stroke-width="7"/>' +
+    '<circle cx="100" cy="100" r="72" fill="none" stroke="#c9a227" stroke-width="3"/>' +
+    logoSpikesHTML() +
+    // клинок 1 — с левого-нижнего угла к правому-верхнему
+    '<path d="M62 132 L100 100 L134 66 L140 60 Q144 56 140 52 L134 50 Q128 48 124 52 L120 56 L86 92 Z" fill="url(#lblade)"/>' +
+    // клинок 2 — зеркально (X-образно)
+    '<path d="M138 132 L100 100 L66 66 L60 60 Q56 56 60 52 L66 50 Q72 48 76 52 L80 56 L114 92 Z" fill="url(#lblade)"/>' +
+    // синие камни в золотой оправе на рукоятях
+    '<circle cx="100" cy="100" r="12" fill="none" stroke="#e0b63f" stroke-width="4"/>' +
+    '<rect x="92" y="92" width="16" height="16" fill="#8cb8ff" transform="rotate(45 100 100)" stroke="#e0b63f" stroke-width="2"/>' +
+    '</svg>';
+}
+
+function logoSpikesHTML() {
+  let s = '';
+  for (let i = 0; i < 12; i++) {
+    const a = i * 30 * Math.PI / 180;
+    const x = 100 + 88 * Math.cos(a), y = 100 + 88 * Math.sin(a);
+    const x2 = 100 + 98 * Math.cos(a), y2 = 100 + 98 * Math.sin(a);
+    s += '<path d="M' + x.toFixed(1) + ' ' + y.toFixed(1) + ' L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '" stroke="#e0b63f" stroke-width="5" stroke-linecap="round"/>';
+  }
+  return s;
+}
+
+function fillLoaderLogo() {
+  const el = document.getElementById('loader-logo');
+  if (el) el.innerHTML = loaderLogoSVG();
 }
 
 // Закрыть стартовый экран и показать игру (меню Битвы титанов)
