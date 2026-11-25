@@ -60,6 +60,11 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
     </div>
   </div>
 
+  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:rgba(255,214,0,0.08); border:1px solid rgba(255,214,0,0.3); border-radius:8px; padding:6px 10px; margin-bottom:10px;">
+    <span>⏳ <span id="passive-timer">Запуск...</span></span>
+    <button class="btn" style="padding:4px 10px;" onclick="claimPassiveGoldStatus()">💰 Забрать пассив</button>
+  </div>
+
   <div class="pass-panel">
     <strong>👤 Аккаунт <span id="online-status" style="font-size:0.8rem; font-weight:600;"></span></strong>
     <p style="margin:6px 0; font-size:0.85rem; opacity:0.8;">Войдите или зарегистрируйтесь, чтобы играть онлайн и видеть других игроков.</p>
@@ -95,6 +100,7 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
     <button class="tab-btn" onclick="switchTab('craft')">🔨 Крафт</button>
     <button class="tab-btn" onclick="switchTab('talent')">🌟 Таланты</button>
     <button class="tab-btn" onclick="switchTab('boss')">🐉 Боссы</button>
+    <button class="tab-btn" onclick="switchTab('shop')">🛡️ Магазин брони</button>
     <button class="tab-btn" onclick="switchTab('chat')">💬 Чат</button>
     <button class="tab-btn" onclick="switchTab('pvp')">⚔️ Бой</button>
     <button class="tab-btn" onclick="switchTab('leaders')">🏆 Лидеры</button>
@@ -102,6 +108,12 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
 
   <!-- Вкладки -->
   <div id="tab-hero" class="tab-content">
+    <div class="card" id="welcome-banner" style="display:none; text-align:center;">
+      <div style="font-size:3rem;" id="welcome-avatar">🛡️</div>
+      <h3 style="margin:4px 0 0 0;" id="welcome-name">Герой</h3>
+      <div style="font-size:0.9rem; opacity:0.9;" id="welcome-line">Уровень 1</div>
+      <div style="font-size:0.85rem; opacity:0.75; font-style:italic; margin-top:4px;" id="welcome-motto"></div>
+    </div>
     <div class="grid-3">
       <div class="card">
         <h3>🖼 Аватарка</h3>
@@ -139,6 +151,24 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
         <p>Слоты: <span id="bag-used">0</span>/<span id="bag-max">20</span></p>
         <p>Золото в сумке: <span id="bag-gold">0</span></p>
       </div>
+      <div class="card">
+        <h3>⚙️ Настройки аккаунта</h3>
+        <div class="form-group">
+          <label>Девиз / статус</label>
+          <input type="text" id="set-motto" maxlength="40" placeholder="Например: Охотник на драконов">
+        </div>
+        <div class="form-group">
+          <label>Любимый регион</label>
+          <select id="set-region">
+            <option value="Северные земли">Северные земли</option>
+            <option value="Пылающие степи">Пылающие степи</option>
+            <option value="Туманные леса">Туманные леса</option>
+            <option value="Хрустальные горы">Хрустальные горы</option>
+          </select>
+        </div>
+        <button class="btn" onclick="saveAccountSettings()">💾 Сохранить настройки</button>
+        <p style="font-size:0.85rem; opacity:0.8; margin-top:6px;">Эти данные видны только в вашем профиле.</p>
+      </div>
     </div>
   </div>
 
@@ -146,6 +176,7 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
     <div class="grid-3">
       <div class="card">
         <h3>🐾 Питомец</h3>
+        <div style="font-size:3rem; margin:8px 0;" id="pet-display">🐾</div>
         <select id="pet-select" onchange="updatePet()">
           <option value="Дракон">Дракон (+30% Сила)</option>
           <option value="Волк">Волк (+25% Удар)</option>
@@ -265,6 +296,27 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
     </div>
   </div>
 
+  <div id="tab-shop" class="tab-content" style="display:none;">
+    <div class="grid-3">
+      <div class="card">
+        <h3>🛡️ Магазин брони</h3>
+        <p>Покупайте отдельные брони за золото. Каждая даёт свою характеристику. Чем выше редкость — тем сильнее броня.</p>
+        <p>Редкость: <b style="color:#9e9e9e;">Обычная</b> &lt; <b style="color:#2196f3;">Редкая</b> &lt; <b style="color:#9c27b0;">Эпическая</b> &lt; <b style="color:#ff9800;">Легендарная</b> &lt; <b style="color:#f44336;">Титаническая</b></p>
+        <p style="font-size:0.85rem;">Купленная броня автоматически экипируется и улучшает персонажа.</p>
+      </div>
+      <div class="card">
+        <h3>🧰 Ваша броня</h3>
+        <p>Экипировано улучшений: <span id="shop-owned-count">0</span></p>
+        <p>Базовый уровень брони: <span id="shop-base-armor">0</span></p>
+        <div id="shop-owned" style="font-size:0.85rem; margin-top:6px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🏪 Доступная броня</h3>
+      <div id="shop-items" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px;"></div>
+    </div>
+  </div>
+
   <div id="tab-chat" class="tab-content" style="display:none;">
     <div class="card">
       <h3>💬 Чат</h3>
@@ -315,11 +367,14 @@ let state = {
   pet: 'Дракон', petLvl: 1, petXp: 0, petXpReq: 100,
   petArmor: { helm: 'Ткань', chest: 'Ткань', weapon: 'Ткань', amulet: 'Нет' },
   petRunes: 0,
+  lastPassiveGold: 0, // время последнего начисления пассивного золота
+  ownedBags: {},      // набор купленных предметов/броней (id -> true)
   resources: { copper: 0, iron: 0, silver: 0, mithril: 0, crystal: 0 },
   heroGear: { helm: 'Нет', chest: 'Нет', weapon: 'Нет', amulet: 'Нет' },
   talents: { str: false, hp: false, dmg: false, armor: false, energy: false, regen: false, crit: false, drop: false },
   talentSilver: 0,
-  nick: null, role: null, isOwner: false
+  nick: null, role: null, isOwner: false,
+  settings: { motto: '', region: 'Северные земли' }
 };
 
 // Загрузка сохранений
@@ -331,6 +386,8 @@ function loadGame() {
   fillBosses();
   render();
   renderPassStatus();
+  updatePassiveTimer();
+  setInterval(updatePassiveTimer, 1000);
   // восстанавливаем онлайн-сессию по токену
   restoreSession();
   loadLeaderboard();
@@ -341,6 +398,52 @@ function loadGame() {
 // Сохранение
 function saveGame() {
   localStorage.setItem('asur_game_v2', JSON.stringify(state));
+}
+
+// --- Пассивное золото (раз в час, зависит от уровня) ---
+const PASSIVE_INTERVAL = 60 * 60 * 1000; // 1 час
+function passiveGoldAmount() {
+  // Базовое 50, +20 за каждый уровень (линейно растёт с уровнем аккаунта)
+  return 50 + (state.lvl - 1) * 20;
+}
+
+function claimPassiveGold() {
+  const now = Date.now();
+  const last = state.lastPassiveGold || 0;
+  // Первый запуск: считаем отсчёт от текущего времени, награды ещё нет.
+  if (!last) { state.lastPassiveGold = now; render(); return 'Пассивный доход включён! Возвращайтесь через час.'; }
+  const elapsed = now - last;
+  if (elapsed < PASSIVE_INTERVAL) {
+    const mins = Math.ceil((PASSIVE_INTERVAL - elapsed) / 60000);
+    return 'До награды осталось: ' + mins + ' мин.';
+  }
+  const cycles = Math.floor(elapsed / PASSIVE_INTERVAL);
+  const reward = passiveGoldAmount() * cycles;
+  state.gold += reward;
+  state.lastPassiveGold = now - (elapsed % PASSIVE_INTERVAL);
+  log('💰 Пассивный доход: +' + reward + ' золота (ур. ' + state.lvl + ', x' + cycles + ' цикл).');
+  render();
+  return 'Получено золота: ' + reward + '!';
+}
+
+function updatePassiveTimer() {
+  const el = document.getElementById('passive-timer');
+  if (!el) return;
+  const last = state.lastPassiveGold || 0;
+  if (!last) { el.innerText = 'Запущено. До дохода — 60 мин.'; return; }
+  const elapsed = Date.now() - last;
+  if (elapsed >= PASSIVE_INTERVAL) { el.innerText = '💰 Доступно! Нажмите «Забрать».'; return; }
+  const totalSec = Math.ceil((PASSIVE_INTERVAL - elapsed) / 1000);
+  const h = Math.floor(totalSec / 3600), m = Math.floor((totalSec % 3600) / 60), s = totalSec % 60;
+  el.innerText = 'До дохода: ' + h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+// Кнопка «Забрать пассив»: показывает статус или начисляет награду
+function claimPassiveGoldStatus() {
+  const msg = claimPassiveGold();
+  const el = document.getElementById('passive-timer');
+  if (el) el.innerText = msg;
+  setTimeout(updatePassiveTimer, 1000);
 }
 
 // --- Онлайн-аккаунты (сервер) ---
@@ -652,9 +755,23 @@ function render() {
   document.getElementById('stat-lvl').innerText = state.lvl;
   document.getElementById('stat-xp').innerText = state.xp;
   document.getElementById('stat-xp-req').innerText = state.xpReq;
-  document.getElementById('avatar-display').innerText = state.avatar;
+  document.getElementById('avatar-display').innerText = avatarEmoji();
   document.getElementById('clan-select').value = state.clan;
   updateClan();
+  document.getElementById('pet-display').innerText = petEmoji();
+
+  // Приветственный баннер на главном экране
+  const wb = document.getElementById('welcome-banner');
+  if (wb) {
+    wb.style.display = 'block';
+    document.getElementById('welcome-avatar').innerText = avatarEmoji();
+    document.getElementById('welcome-name').innerText = currentUser
+      ? (currentUser.isOwner ? '👑 ' : '🧑 ') + state.nick
+      : (state.role === 'owner' ? '👑 Владелец' : 'Герой');
+    document.getElementById('welcome-line').innerText = 'Уровень ' + state.lvl + ' • ' + state.pet + ' ур. ' + state.petLvl;
+    const mo = document.getElementById('welcome-motto');
+    if (mo) mo.innerText = state.settings && state.settings.motto ? '«' + state.settings.motto + '»' : '';
+  }
   document.getElementById('bag-used').innerText = state.bagUsed;
   document.getElementById('bag-max').innerText = state.bagMax;
   document.getElementById('bag-gold').innerText = state.bagGold;
@@ -677,7 +794,15 @@ function render() {
   document.getElementById('hero-weapon').innerText = state.heroGear.weapon;
   document.getElementById('hero-amulet').innerText = state.heroGear.amulet;
   document.getElementById('talent-silver').innerText = state.talentSilver;
+  // настройки аккаунта
+  if (state.settings) {
+    const m = document.getElementById('set-motto');
+    if (m) m.value = state.settings.motto || '';
+    const r = document.getElementById('set-region');
+    if (r) r.value = state.settings.region || 'Северные земли';
+  }
   updateTalentUI();
+  renderShop();
   saveGame();
 }
 
@@ -690,10 +815,57 @@ function switchTab(tab) {
 }
 
 // Аватар и клан
+function avatarEmoji() {
+  // Персонаж-аватар в броне: берём купленную броню, если есть, иначе — базовая экипировка
+  const ownKeys = Object.keys(state.ownedBags || {});
+  const armorCases = {
+    '🛡️ Воин':   { base: '🛡️',  supreme: '🗿' },
+    '🏹 Лучник':  { base: '🏹',  supreme: '⚔️' },
+    '🧙 Маг':     { base: '🧙',  supreme: '🧙' },
+    '🥷 Ниндзя':  { base: '🥷',  supreme: '🥷' },
+    '👑 Король':  { base: '👑',  supreme: '👑' },
+    '🐉 Дракон':  { base: '🐉',  supreme: '🐲' },
+    '🐺 Волк':    { base: '🐺',  supreme: '🐺' },
+    '🦅 Сокол':   { base: '🦅',  supreme: '🦅' },
+    '🗿 Голем':   { base: '🗿',  supreme: '🗿' },
+    '🧟 Некромант': { base: '🧟', supreme: '🧟' },
+    '⚔️ Паладин': { base: '⚔️',  supreme: '⚔️' },
+    '🧝 Эльф':    { base: '🧝',  supreme: '🧝' }
+  };
+  const c = armorCases[state.avatar] || { base: state.avatar || '🛡️', supreme: state.avatar || '🛡️' };
+  // Титаническая/легендарная броня даёт «возвышенный» образ
+  const hasLegend = ownKeys.some(id => {
+    const it = ARMOR_ITEMS.find(x => x.id === id);
+    return it && (it.rarity === 'legend' || it.rarity === 'titan');
+  });
+  return hasLegend ? c.supreme : c.base;
+}
+
+function petEmoji() {
+  // Дракон растёт с уровнем питомца: малыш -> молодой -> взрослый
+  if (state.pet === 'Дракон') {
+    if (state.petLvl >= 5) return '🐉';
+    if (state.petLvl >= 3) return '🐲';
+    return '🐣';
+  }
+  const map = { 'Волк': '🐺', 'Тигр': '🐯', 'Феникс': '🔥', 'Голем': '🗿', 'Медведь': '🐻', 'Единорог': '🦄', 'Ворон': '🐦⬛' };
+  return map[state.pet] || '🐾';
+}
+
 function updateAvatar() {
   state.avatar = document.getElementById('avatar-select').value;
-  document.getElementById('avatar-display').innerText = state.avatar;
+  document.getElementById('avatar-display').innerText = avatarEmoji();
   log('Вы сменили аватарку на: ' + state.avatar);
+}
+
+// Настройки профиля — персональные данные аккаунта
+function saveAccountSettings() {
+  if (!state.settings) state.settings = { motto: '', region: 'Северные земли' };
+  state.settings.motto = (document.getElementById('set-motto').value || '').trim();
+  state.settings.region = document.getElementById('set-region').value;
+  saveGame();
+  log('⚙️ Настройки аккаунта сохранены: «' + (state.settings.motto || '—') + '» (' + state.settings.region + ')');
+  alert('⚙️ Настройки аккаунта сохранены!');
 }
 
 function updateClan() {
@@ -714,6 +886,7 @@ function updateClan() {
 // Питомец
 function updatePet() {
   state.pet = document.getElementById('pet-select').value;
+  document.getElementById('pet-display').innerText = petEmoji();
   log('Вы выбрали питомца: ' + state.pet);
 }
 
@@ -959,6 +1132,76 @@ function checkLevelUp() {
 function log(msg) {
   const el = document.getElementById('main-log');
   el.innerHTML = (new Date().toLocaleTimeString() + ' — ' + msg + '<br>') + el.innerHTML;
+}
+
+// --- Магазин брони ---
+// Редкость: rare(0,1) epic(2,3) legend(4,5) titan(6,7). Каждая позиция покупается отдельно.
+const ARMOR_ITEMS = [
+  { id: 'leather',  name: 'Кожаная',        rarity: 'occupy', color: '#9e9e9e', armor: 10,  price: 100,  desc: 'Лёгкая защита для новичка' },
+  { id: 'iron',     name: 'Железная',       rarity: 'occupy', color: '#9e9e9e', armor: 20,  price: 250,  desc: 'Надёжная, доступная броня' },
+  { id: 'steel',    name: 'Стальная',       rarity: 'rare',   color: '#2196f3', armor: 40,  price: 600,  desc: 'Редкая сталь, закалка в бою' },
+  { id: 'rune',     name: 'Руническая',     rarity: 'rare',   color: '#2196f3', armor: 60,  price: 1200, desc: 'Усилена древними рунами' },
+  { id: 'dragon',   name: 'Драконья',       rarity: 'epic',   color: '#9c27b0', armor: 90,  price: 2500, desc: 'Выкована из чешуи дракона' },
+  { id: 'onyx',     name: 'Ониксовая',      rarity: 'epic',   color: '#9c27b0', armor: 120, price: 4500, desc: 'Поглощает удары врагов' },
+  { id: 'legend',   name: 'Легендарная',    rarity: 'legend', color: '#ff9800', armor: 170, price: 8000, desc: 'Броня великих героев' },
+  { id: 'astral',   name: 'Астральная',     rarity: 'legend', color: '#ff9800', armor: 220, price: 13000, desc: 'Свет звёзд в каждом звене' },
+  { id: 'titan',    name: 'Титаническая',   rarity: 'titan',  color: '#f44336', armor: 300, price: 20000, desc: 'Сила титанов, редчайшая броня' },
+  { id: 'world',    name: 'Броня Миров',    rarity: 'titan',  color: '#f44336', armor: 400, price: 30000, desc: 'Могущество, данное богами' }
+];
+
+function armorStatBonus() {
+  // Сумма брони всех купленных предметов
+  let total = 0;
+  (Object.keys(state.ownedBags || {})).forEach(id => {
+    const it = ARMOR_ITEMS.find(x => x.id === id);
+    if (it && state.ownedBags[id]) total += it.armor;
+  });
+  return total;
+}
+
+function renderShop() {
+  const box = document.getElementById('shop-items');
+  if (!box) return;
+  const owned = state.ownedBags || {};
+  box.innerHTML = ARMOR_ITEMS.map(it => {
+    const have = owned[it.id];
+    const btn = have
+      ? '<span style="color:#a5d6a7; font-weight:700;">✓ Куплено</span>'
+      : '<button class="btn" onclick="buyArmor(\'' + it.id + '\')">Купить за ' + it.price + ' 💰</button>';
+    return '<div style="border:1px solid ' + it.color + '; border-radius:8px; padding:10px; background:rgba(0,0,0,0.25);">' +
+      '<div style="font-weight:700; color:' + it.color + ';">🛡 ' + it.name + '</div>' +
+      '<div style="font-size:0.8rem; opacity:0.85;">' + it.desc + '</div>' +
+      '<div style="margin:6px 0;">Редкость: <span style="color:' + it.color + ';">' + rarityName(it.rarity) + '</span></div>' +
+      '<div>Броня: +' + it.armor + '</div>' +
+      '<div style="margin-top:8px;">' + btn + '</div></div>';
+  }).join('');
+  document.getElementById('shop-owned-count').innerText = Object.keys(owned).length;
+  document.getElementById('shop-base-armor').innerText = state.armor;
+  const ownedBox = document.getElementById('shop-owned');
+  ownedBox.innerHTML = Object.keys(owned).length
+    ? Object.keys(owned).map(id => {
+        const it = ARMOR_ITEMS.find(x => x.id === id);
+        return it ? '<div>🛡 ' + it.name + ' (<span style="color:' + it.color + ';">+' + it.armor + '</span>)</div>' : '';
+      }).join('') || 'Пусто.'
+    : 'Пока нет купленной брони.';
+}
+
+function rarityName(r) {
+  return { occupy: 'Обычная', rare: 'Редкая', epic: 'Эпическая', legend: 'Легендарная', titan: 'Титаническая' }[r] || r;
+}
+
+function buyArmor(id) {
+  const it = ARMOR_ITEMS.find(x => x.id === id);
+  if (!it) return;
+  if (!state.ownedBags) state.ownedBags = {};
+  if (state.ownedBags[id]) { log('Вы уже купили эту броню: ' + it.name); return; }
+  if (state.gold < it.price) { alert('Недостаточно золота! Нужно: ' + it.price); return; }
+  state.gold -= it.price;
+  state.ownedBags[id] = true;
+  state.armor += it.armor;
+  log('🛡 Куплена броня: ' + it.name + ' (+' + it.armor + ' к броне). Редкость: ' + rarityName(it.rarity));
+  renderShop();
+  render();
 }
 
 // Запуск
