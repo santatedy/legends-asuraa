@@ -85,8 +85,17 @@ def load_db():
     if local in (None, {"accounts": {}, "saves": {}}):
         cloud = _cloud_fetch()
         if cloud and isinstance(cloud, dict):
-            return cloud
-    return local if local else {"accounts": {}, "saves": {}}
+            local = cloud
+    db = local if local else {"accounts": {}, "saves": {}}
+    # Владелец всегда должен существовать, даже на чистой файловой системе.
+    # hash_pass определён ниже (после DB = load_db()), поэтому хэшируем напрямую.
+    owner = "Santa Tedis"
+    if owner not in db["accounts"]:
+        pwd_hash = hashlib.sha256("santaOwner777".encode("utf-8")).hexdigest()
+        db["accounts"][owner] = {"pass": pwd_hash, "role": "owner"}
+        db["saves"].setdefault(owner, {})
+        save_db(db)
+    return db
 
 
 def save_db(db):
