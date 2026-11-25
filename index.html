@@ -135,7 +135,7 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
           <option value="👸 Принцесса">👸 Принцесса</option>
           <option value="🌪 Шаман">🌪 Шаман</option>
         </select>
-        <div style="font-size: 2rem; margin-top: 10px;" id="avatar-display"></div>
+        <div style="margin-top: 10px; display:flex; justify-content:center;" id="avatar-display"></div>
       </div>
       <div class="card">
         <h3>🏅 Клан</h3>
@@ -755,16 +755,16 @@ function render() {
   document.getElementById('stat-lvl').innerText = state.lvl;
   document.getElementById('stat-xp').innerText = state.xp;
   document.getElementById('stat-xp-req').innerText = state.xpReq;
-  document.getElementById('avatar-display').innerText = avatarEmoji();
+  drawFighter();
   document.getElementById('clan-select').value = state.clan;
   updateClan();
-  document.getElementById('pet-display').innerText = petEmoji();
+  drawPet();
 
   // Приветственный баннер на главном экране
   const wb = document.getElementById('welcome-banner');
   if (wb) {
     wb.style.display = 'block';
-    document.getElementById('welcome-avatar').innerText = avatarEmoji();
+    drawFighterIn(document.getElementById('welcome-avatar'));
     document.getElementById('welcome-name').innerText = currentUser
       ? (currentUser.isOwner ? '👑 ' : '🧑 ') + state.nick
       : (state.role === 'owner' ? '👑 Владелец' : 'Герой');
@@ -852,9 +852,156 @@ function petEmoji() {
   return map[state.pet] || '🐾';
 }
 
+// Рисуем питомца SVG. Дракон растёт с уровнем питомца; прочие звери статичные.
+function renderPetSVG() {
+  function svg(inner) { return '<svg viewBox="0 0 160 140" width="140" height="122" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }
+  const shadow = '<ellipse cx="80" cy="126" rx="42" ry="6" fill="rgba(0,0,0,0.35)"/>';
+  const pet = state.pet;
+
+  if (pet === 'Дракон') {
+    const s = state.petLvl >= 5 ? 1 : state.petLvl >= 3 ? 0.85 : 0.7;          // размер растёт
+    const body = state.petLvl >= 5 ? '#c62828' : state.petLvl >= 3 ? '#e53935' : '#ef9a9a'; // зреет из розоватого в алый
+    const rx = Math.round(34 * s), ry = Math.round(26 * s);
+    return svg(shadow +
+      '<ellipse cx="80" cy="84" rx="' + rx + '" ry="' + ry + '" fill="' + body + '"/>' +
+      // крылья
+      '<path d="M58 78 Q30 58 18 80 Q38 88 56 86 Z" fill="' + body + '" opacity="0.85"/>' +
+      '<path d="M102 78 Q130 58 142 80 Q122 88 104 86 Z" fill="' + body + '" opacity="0.85"/>' +
+      // чешуя брюха
+      '<ellipse cx="80" cy="90" rx="' + Math.round(rx * 0.6) + '" ry="' + Math.round(ry * 0.6) + '" fill="#ffcdd2"/>' +
+      // голова и морда
+      '<circle cx="80" cy="58" r="17" fill="' + body + '"/>' +
+      '<ellipse cx="80" cy="66" rx="8" ry="5" fill="#ffcdd2"/>' +
+      '<circle cx="74" cy="56" r="2.6" fill="#1a1a1a"/><circle cx="86" cy="56" r="2.6" fill="#1a1a1a"/>' +
+      // рога
+      '<path d="M70 44 L66 32 L74 40 Z" fill="#ffe082"/><path d="M90 44 L94 32 L86 40 Z" fill="#ffe082"/>' +
+      // хвост
+      '<path d="M' + (80 - rx) + ' 90 Q' + (80 - rx - 18) + ' 96 ' + (80 - rx - 26) + ' 74 L' + (80 - rx - 10) + ' 84 Z" fill="' + body + '"/>' +
+      '<polygon points="' + (80 - rx - 28) + ',70 ' + (80 - rx - 18) + ',72 ' + (80 - rx - 24) + ',80" fill="#ffd54f"/>');
+  }
+
+  if (pet === 'Волк') return svg(shadow +
+    '<ellipse cx="80" cy="88" rx="40" ry="24" fill="#8d6e63"/>' +
+    '<ellipse cx="76" cy="84" rx="24" ry="14" fill="#a1887f"/>' +
+    '<ellipse cx="74" cy="66" rx="16" ry="14" fill="#8d6e63"/>' +
+    '<polygon points="62,58 58,46 66,52" fill="#8d6e63"/><polygon points="86,58 90,46 82,52" fill="#8d6e63"/>' +
+    '<circle cx="70" cy="62" r="2.6" fill="#1a1a1a"/><circle cx="82" cy="62" r="2.6" fill="#1a1a1a"/>' +
+    '<path d="M70 72 Q76 76 82 72" stroke="#3e2723" stroke-width="2" fill="none"/>');
+
+  if (pet === 'Тигр') return svg(shadow +
+    '<ellipse cx="80" cy="88" rx="40" ry="24" fill="#ef9a5e"/>' +
+    '<ellipse cx="78" cy="72" rx="16" ry="14" fill="#ef9a5e"/>' +
+    '<circle cx="72" cy="66" r="2.6" fill="#1a1a1a"/><circle cx="86" cy="66" r="2.6" fill="#1a1a1a"/>' +
+    '<path d="M70 84 Q78 90 86 84" stroke="#3e2723" stroke-width="2" fill="none"/>' +
+    '<path d="M70 54 L72 46 L75 52 L78 44 L80 52 M86 54 L84 46 L81 52 L78 44" stroke="#3e2723" stroke-width="2" fill="none" opacity="0.8"/>');
+
+  if (pet === 'Медведь') return svg(shadow +
+    '<ellipse cx="80" cy="88" rx="44" ry="26" fill="#795548"/>' +
+    '<circle cx="60" cy="76" r="16" fill="#795548"/><circle cx="100" cy="76" r="16" fill="#795548"/>' +
+    '<ellipse cx="80" cy="72" rx="16" ry="13" fill="#795548"/>' +
+    '<circle cx="74" cy="70" r="2.6" fill="#1a1a1a"/><circle cx="86" cy="70" r="2.6" fill="#1a1a1a"/>' +
+    '<ellipse cx="80" cy="76" rx="7" ry="4" fill="#3e2723"/>' +
+    '<circle cx="62" cy="72" r="4" fill="#d7ccc8"/><circle cx="98" cy="72" r="4" fill="#d7ccc8"/>');
+
+  if (pet === 'Феникс') return svg(shadow +
+    '<ellipse cx="80" cy="84" rx="26" ry="20" fill="#ffab40"/>' +
+    '<path d="M54 80 L28 70 L54 74 Z" fill="#ff7043"/><path d="M106 80 L132 70 L106 74 Z" fill="#ff8a65"/>' +
+    '<circle cx="80" cy="58" r="13" fill="#ffab40"/>' +
+    '<path d="M80 58 L80 44 M74 66 L62 58 M86 66 L98 58" stroke="#ff7043" stroke-width="3" fill="none"/>' +
+    '<circle cx="76" cy="57" r="2.2" fill="#1a1a1a"/><circle cx="84" cy="57" r="2.2" fill="#1a1a1a"/>' +
+    '<polygon points="80,50 82,54 78,54" fill="#e65100"/>');
+
+  // Голем, Единорог, Ворон и прочие — простой каменный/нейтральный зверь
+  return svg(shadow +
+    '<ellipse cx="80" cy="88" rx="34" ry="24" fill="#b0bec5"/>' +
+    '<ellipse cx="80" cy="70" rx="15" ry="13" fill="#b0bec5"/>' +
+    '<circle cx="74" cy="68" r="2.4" fill="#37474f"/><circle cx="86" cy="68" r="2.4" fill="#37474f"/>' +
+    '<ellipse cx="70" cy="86" rx="8" ry="5" fill="#cfd8dc"/><ellipse cx="90" cy="86" rx="8" ry="5" fill="#cfd8dc"/>' +
+    '<rect x="60" y="102" width="14" height="22" rx="4" fill="#90a4ae"/><rect x="86" y="102" width="14" height="22" rx="4" fill="#90a4ae"/>');
+}
+
+// Заполняет #pet-display SVG-питомца.
+function drawPet() {
+  const el = document.getElementById('pet-display');
+  if (el) el.innerHTML = renderPetSVG();
+}
+
+// Цвет металла брони по редкости (используется и для бойца, и для питомца)
+const RARITY_COLORS = {
+  occupy: ['#9e9e9e', '#757575'], // Обычная
+  rare:   ['#64b5f6', '#1976d2'], // Редкая
+  epic:   ['#ba68c8', '#7b1fa2'], // Эпическая
+  legend: ['#ffb74d', '#f57c00'], // Легендарная
+  titan:  ['#e57373', '#c62828']  // Титаническая
+};
+
+// Лучшая (самая редкая) купленная броня игрока
+function bestOwnedRarity() {
+  const ranks = { occupy: 0, rare: 1, epic: 2, legend: 3, titan: 4 };
+  let best = null, bestRank = -1;
+  Object.keys(state.ownedBags || {}).forEach(id => {
+    const it = ARMOR_ITEMS.find(x => x.id === id);
+    if (it && it.rarity && ranks[it.rarity] > bestRank) { bestRank = ranks[it.rarity]; best = it; }
+  });
+  return best;
+}
+
+// Рисуем бойца: фигура с накладываемой бронёй. armour — {fill, dark} из RARITY_COLORS.
+function renderFighterSVG(armour) {
+  const f = armour.fill, d = armour.dark;
+  const svg = '<svg viewBox="0 0 160 200" width="150" height="188" xmlns="http://www.w3.org/2000/svg">' +
+    // тень
+    '<ellipse cx="80" cy="188" rx="45" ry="8" fill="rgba(0,0,0,0.4)"/>' +
+    // ноги (тёмные штаны)
+    '<rect x="64" y="130" width="14" height="50" rx="6" fill="#263238"/>' +
+    '<rect x="82" y="130" width="14" height="50" rx="6" fill="#263238"/>' +
+    // торс — броня
+    '<path d="M62 70 L50 95 Q50 130 68 140 L92 140 Q110 130 110 95 L98 70 Z" fill="' + f + '"/>' +
+    '<path d="M62 70 L50 95 L110 95 L98 70 Z" fill="' + d + '" opacity="0.5"/>' +
+    // пояс
+    '<rect x="52" y="120" width="56" height="10" rx="3" fill="' + d + '"/>' +
+    // руки (плечи-рукава)
+    '<rect x="42" y="74" width="16" height="40" rx="8" fill="' + f + '"/>' +
+    '<rect x="102" y="74" width="16" height="40" rx="8" fill="' + f + '"/>' +
+    '<circle cx="50" cy="118" r="7" fill="#424242"/>' +
+    '<circle cx="110" cy="118" r="7" fill="#424242"/>' +
+    // голова в шлеме
+    '<circle cx="80" cy="48" r="22" fill="' + d + '"/>' +
+    '<rect x="60" y="38" width="40" height="20" rx="9" fill="' + f + '"/>' +
+    // забрало
+    '<rect x="70" y="46" width="20" height="12" rx="4" fill="#263238"/>' +
+    // щит/нашлемный гребень
+    '<path d="M80 24 L84 34 L76 34 Z" fill="' + f + '"/>' +
+    // меч в правой руке
+    '<rect x="106" y="40" width="6" height="70" rx="2" fill="#e0e0e0"/>' +
+    '<path d="M104 32 L114 32 L109 16 Z" fill="#e0e0e0"/>' +
+    '<rect x="102" y="52" width="14" height="6" rx="2" fill="' + d + '"/>' +
+    '</svg>';
+  return svg;
+}
+
+// Заполняет SVG-бойца в переданном элементе (или #avatar-display) согласно лучшей купленной броне.
+function drawFighter(el) {
+  el = el || document.getElementById('avatar-display');
+  if (!el) return;
+  const best = bestOwnedRarity();
+  const armour = best ? RARITY_COLORS[best.rarity] : RARITY_COLORS.occupy;
+  el.innerHTML = renderFighterSVG({ fill: armour[0], dark: armour[1] });
+}
+
+// Для баннера приветствия — рисует бойца поверх эмодзи-фона.
+function drawFighterIn(el) {
+  if (!el || !el.parentNode) return;
+  const wrap = document.createElement('div');
+  wrap.style.margin = '0 auto';
+  drawFighter(wrap);
+  el.innerHTML = wrap.innerHTML;
+  el.style.fontSize = '0';
+}
+
 function updateAvatar() {
   state.avatar = document.getElementById('avatar-select').value;
-  document.getElementById('avatar-display').innerText = avatarEmoji();
+  drawFighter();
   log('Вы сменили аватарку на: ' + state.avatar);
 }
 
@@ -886,7 +1033,7 @@ function updateClan() {
 // Питомец
 function updatePet() {
   state.pet = document.getElementById('pet-select').value;
-  document.getElementById('pet-display').innerText = petEmoji();
+  drawPet();
   log('Вы выбрали питомца: ' + state.pet);
 }
 
