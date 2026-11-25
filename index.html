@@ -75,6 +75,28 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
 .tt-relic{display:inline-block; background:linear-gradient(135deg, rgba(255,183,0,0.25), rgba(180,90,0,0.25)); border:1px solid rgba(255,183,0,0.6); border-radius:10px; padding:8px 14px; color:#ffd54f; font-weight:700; margin:8px 0; box-shadow:0 0 14px rgba(255,183,0,0.3);}
 .tt-log{background:rgba(0,0,0,0.55); border:1px solid #333; border-radius:10px; padding:10px; font-family:monospace; font-size:0.82rem; max-height:150px; overflow-y:auto; margin:10px 0; text-align:left; color:#e0e0e0;}
 .tt-btn-gold{background:linear-gradient(135deg,#ffb300,#f57f17); color:#1a1a1a; font-weight:800; border:none;}
+/* === Экран героя по макету «Битва титанов» === */
+.hero-panel{display:flex; flex-direction:column; gap:12px;}
+.hero-top{display:flex; gap:14px; align-items:center; background:linear-gradient(135deg,rgba(40,28,80,0.85),rgba(15,10,35,0.95)); border:1px solid rgba(255,183,0,0.35); border-radius:14px; padding:14px;}
+.hero-top .hero-fig{flex-shrink:0;}
+.hero-stats{flex:1; display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.hero-stat{display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:8px 10px;}
+.hero-stat .hs-ico{font-size:1.25rem;}
+.hero-stat b{color:#fff; font-size:0.75rem; font-weight:600; opacity:0.85; display:block;}
+.hero-stat span:nth-child(2){color:#ffd54f; font-weight:800; font-size:1rem;}
+.gear-panel{background:linear-gradient(135deg,rgba(40,28,80,0.8),rgba(15,10,35,0.9)); border:1px solid rgba(255,183,0,0.35); border-radius:14px; padding:14px;}
+.gear-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:10px 0;}
+.gear-slot{aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); border:1px solid rgba(255,183,0,0.4); border-radius:12px; font-size:1.5rem; position:relative;}
+.gear-slot small{font-size:0.6rem; color:var(--t); margin-top:2px; font-weight:400;}
+.gear-slots-row{display:flex; gap:6px;}
+.gear-slots-row .gear-slot{font-size:1.1rem; border-color:rgba(255,255,255,0.15);}
+.gear-meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; font-size:0.85rem;}
+.gear-meta span{background:rgba(255,183,0,0.12); border:1px solid rgba(255,183,0,0.3); border-radius:8px; padding:4px 10px;}
+.pet-block{display:flex; gap:14px; align-items:center; background:linear-gradient(135deg,rgba(40,28,80,0.8),rgba(15,10,35,0.9)); border:1px solid rgba(255,183,0,0.35); border-radius:14px; padding:14px;}
+.pet-block .pet-name{color:#ffd54f; font-weight:800; font-size:1.05rem;}
+.bottom-nav{display:flex; justify-content:space-around; align-items:center; background:linear-gradient(135deg,rgba(40,28,80,0.95),rgba(15,10,35,0.98)); border:1px solid rgba(255,183,0,0.3); border-radius:14px; padding:10px 6px; margin-top:6px;}
+.bottom-nav button{background:transparent; border:none; color:var(--s); font-size:1.5rem; cursor:pointer; padding:6px 12px; border-radius:10px; transition:all .15s;}
+.bottom-nav button:hover{background:rgba(255,183,0,0.15); transform:translateY(-2px);}
 </style>
 </head>
 <body>
@@ -144,6 +166,35 @@ input, select{width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #
       <div style="font-size:0.9rem; opacity:0.9;" id="welcome-line">Уровень 1</div>
       <div style="font-size:0.85rem; opacity:0.75; font-style:italic; margin-top:4px;" id="welcome-motto"></div>
     </div>
+    <div class="hero-panel">
+      <div class="hero-top">
+        <div class="hero-fig" id="hero-figure"></div>
+        <div class="hero-stats">
+          <div class="hero-stat"><span class="hs-ico">🗡</span><span><b>Сила</b><span id="hs-str">0</span></span></div>
+          <div class="hero-stat"><span class="hs-ico">❤️</span><span><b>Жизнь</b><span id="hs-hp">0</span></span></div>
+          <div class="hero-stat"><span class="hs-ico">🍀</span><span><b>Удача</b><span id="hs-luck">0</span></span></div>
+          <div class="hero-stat"><span class="hs-ico">🛡</span><span><b>Броня</b><span id="hs-armor">0</span></span></div>
+          <div class="hero-stat"><span class="hs-ico">🔮</span><span><b>Мана</b><span id="hs-mana">0</span></span></div>
+        </div>
+      </div>
+      <div class="gear-panel">
+        <h3 style="margin-top:0;">🛡 Снаряжение <span style="font-size:0.85rem; color:var(--t); font-weight:400;" id="gear-count">0/0</span></h3>
+        <div class="gear-grid" id="gear-grid"></div>
+        <div class="gear-slots-row" id="runes-row" title="Руны"></div>
+        <div class="gear-meta">
+          <span>⚒ Заточка: <b id="gear-forge">+0</b></span>
+          <span>✨ Бонус: <b id="gear-bonus">0</b></span>
+        </div>
+      </div>
+      <div class="pet-block">
+        <div id="hero-pet-figure"></div>
+        <div>
+          <div class="pet-name" id="hero-pet-name">Питомец</div>
+          <div style="font-size:0.85rem; opacity:0.85;" id="hero-pet-line">Уровень 1</div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav" id="bottom-nav"></div>
     <div class="grid-3">
       <div class="card">
         <h3>🖼 Аватарка</h3>
@@ -799,6 +850,7 @@ function render() {
   document.getElementById('clan-select').value = state.clan;
   updateClan();
   drawPet();
+  renderHeroPanel();
 
   // Приветственный баннер на главном экране
   const wb = document.getElementById('welcome-banner');
@@ -967,6 +1019,79 @@ function renderPetSVG() {
 function drawPet() {
   const el = document.getElementById('pet-display');
   if (el) el.innerHTML = renderPetSVG();
+}
+
+// ===== Экран героя по макету «Битва титанов» =====
+// 8 слотов снаряжения: [ключ, иконка, название]
+const GEAR_SLOTS = [
+  ['weapon', '⚔️', 'Оружие'], ['shield', '🛡', 'Щит'], ['helm', '⛑', 'Шлем'], ['chest', '🥋', 'Нагрудник'],
+  ['belt', '🎗', 'Пояс'], ['amulet', '📿', 'Амулет'], ['ring', '💍', 'Кольцо'], ['boots', '👢', 'Сапоги']
+];
+
+function renderHeroPanel() {
+  const fig = document.getElementById('hero-figure');
+  if (fig) {
+    const best = bestOwnedRarity();
+    const a = best ? RARITY_COLORS[best.rarity] : RARITY_COLORS.occupy;
+    fig.innerHTML = renderFighterSVG({ fill: a[0], dark: a[1] });
+  }
+  // Характеристики
+  const luck = (state.luck != null) ? state.luck : Math.round(state.lvl * 10);
+  const mana = (state.mana != null) ? state.mana : Math.round(state.lvl * 15);
+  setText('hs-str', state.str);
+  setText('hs-hp', state.hp);
+  setText('hs-luck', luck);
+  setText('hs-armor', state.armor);
+  setText('hs-mana', mana);
+  // Снаряжение: 8 слотов
+  const gear = state.heroGear || { helm: 'Нет', chest: 'Нет', weapon: 'Нет', amulet: 'Нет' };
+  const gearBox = document.getElementById('gear-grid');
+  if (gearBox) {
+    let n = 0;
+    gearBox.innerHTML = GEAR_SLOTS.map(s => {
+      const val = gear[s[0]];
+      const filled = val && val !== 'Нет';
+      if (filled) n++;
+      return '<div class="gear-slot" style="' + (filled ? 'border-color:' + (best ? RARITY_COLORS[best.rarity][0] : '#fff') + ';' : 'opacity:0.55;') + '">' + s[1] + '<small>' + (filled ? val : s[2]) + '</small></div>';
+    }).join('');
+    const gc = document.getElementById('gear-count');
+    if (gc) gc.innerText = n + '/8';
+  }
+  // Руны (6 слотов)
+  const runesRow = document.getElementById('runes-row');
+  if (runesRow) {
+    const runes = (state.heroRunes || 0);
+    let rh = '';
+    for (let i = 0; i < 6; i++) {
+      const lit = i < runes;
+      rh += '<div class="gear-slot" style="' + (lit ? 'border-color:rgba(255,183,0,0.7); color:#ffd54f;' : 'opacity:0.4;') + '">' + (lit ? '✦' : '·') + '</div>';
+    }
+    runesRow.innerHTML = 'Руны: ' + rh;
+  }
+  // Заточка и бонус
+  const forge = (state.gearForge != null) ? state.gearForge : 0;
+  setText('gear-forge', '+'+forge);
+  const bonus = (state.gearBonus != null) ? state.gearBonus : 0;
+  setText('gear-bonus', bonus);
+  // Питомец
+  const pf = document.getElementById('hero-pet-figure');
+  if (pf) pf.innerHTML = renderPetSVG();
+  setText('hero-pet-name', '🐾 ' + state.pet);
+  setText('hero-pet-line', 'Уровень ' + state.petLvl);
+  // Нижняя навигация
+  const nav = document.getElementById('bottom-nav');
+  if (nav) {
+    nav.innerHTML =
+      '<button title="Дом" onclick="switchTab(\'titans\')">🏠</button>' +
+      '<button title="Профиль" onclick="switchTab(\'hero\')">👤</button>' +
+      '<button title="Магазин" onclick="switchTab(\'shop\')">🪙</button>' +
+      '<button title="Меню" onclick="switchTab(\'titans\')">☰</button>';
+  }
+}
+
+function setText(id, v) {
+  const el = document.getElementById(id);
+  if (el) el.innerText = v;
 }
 
 // Цвет металла брони по редкости (используется и для бойца, и для питомца)
