@@ -1274,29 +1274,35 @@ function bestOwnedRarity() {
   return best;
 }
 
-// Уникальные детали брони для каждого качества: возвращает валидные SVG-узлы.
-// f,d — светлый/тёмный цвет редкости (используется для наград за качество).
+// Уникальные эмблемы качества брони: каждая редкость получает крупную узнаваемую
+// нашивку-медальон на груди (разные форма + символ + гирлянда).
 function armorTierDetails(rarity, f, d) {
   const gold = '#fbc02d';
   switch (rarity) {
-    case 'rare':
-      return '<rect x="60" y="82" width="40" height="3" rx="1.5" fill="' + d + '"/>' +
-             '<circle cx="70" cy="96" r="3" fill="' + d + '"/><circle cx="90" cy="96" r="3" fill="' + d + '"/>';
-    case 'epic':
-      return '<path d="M80 88 L84 95 L80 102 L76 95 Z" fill="' + d + '"/>' +
-             '<path d="M46 56 l6 6 M114 56 l-6 6" stroke="' + d + '" stroke-width="2.5" stroke-linecap="round"/>' +
-             '<path d="M44 82 l7 0 M109 82 l-7 0" stroke="' + d + '" stroke-width="2.5" stroke-linecap="round"/>';
-    case 'legend':
-      return '<rect x="60" y="80" width="40" height="20" rx="3" fill="none" stroke="' + gold + '" stroke-width="1.5" opacity="0.9"/>' +
-             '<circle cx="80" cy="90" r="5" fill="none" stroke="' + gold + '" stroke-width="1.5"/>' +
-             '<path d="M88 24 L92 30 L88 36 L84 30 Z" fill="' + gold + '"/>';
-    case 'titan':
-      return '<rect x="58" y="78" width="44" height="24" rx="4" fill="rgba(255,214,0,0.12)" stroke="' + gold + '" stroke-width="1.5"/>' +
-             '<path d="M72 90 L80 84 L88 90 L80 96 Z" fill="' + gold + '"/>' +
-             '<path d="M48 52 l7 7 M112 52 l-7 7" stroke="' + gold + '" stroke-width="2" stroke-linecap="round"/>' +
-             '<path d="M80 2 L85 10 L80 18 L75 10 Z" fill="' + gold + '"/>';
-    default:
-      return ''; // occupy — простая броня без дополнительных деталей
+    case 'rare': // медный ромб с бронзовой окантовкой и мелкими заклёпками
+      return '<path d="M80 86 L89 95 L80 104 L71 95 Z" fill="' + d + '" stroke="#e0e0e0" stroke-width="1.5"/>' +
+             '<path d="M80 90 L84 95 L80 100 L76 95 Z" fill="' + f + '"/>' +
+             '<circle cx="71" cy="95" r="1.4" fill="#fff" opacity="0.8"/><circle cx="80" cy="86" r="1.4" fill="#fff" opacity="0.8"/>' +
+             '<circle cx="89" cy="95" r="1.4" fill="#fff" opacity="0.8"/><circle cx="80" cy="104" r="1.4" fill="#fff" opacity="0.8"/>' +
+             '<path d="M80 108 L78 112 M80 108 L82 112" stroke="' + d + '" stroke-width="1.5" stroke-linecap="round"/>';
+    case 'epic': // пульсирующая звезда-гром на груди с синим ореолом
+      return '<circle cx="80" cy="95" r="11" fill="' + d + '" opacity="0.25"/>' +
+             '<path d="M80 84 L85 88 L82 93 L87 92 L84 97 L89 99 L84 101 L86 107 L80 104 L74 107 L76 101 L71 99 L76 97 L73 92 L78 93 L75 88 Z" fill="' + f + '" stroke="#ffffff" stroke-width="0.8" opacity="0.9"/>' +
+             '<path d="M80 96 L80 112 M74 100 L80 96 L86 100" stroke="' + f + '" stroke-width="1.2" stroke-linecap="round" fill="none"/>';
+    case 'legend': // золотая лавровая эмблема: центральный щит-кристалл с лаврами
+      return '<path d="M80 82 C72 82 66 88 66 96 C66 104 72 110 80 110 C88 110 94 104 94 96 C94 88 88 82 80 82 Z" fill="url(#metalGrad)" stroke="' + gold + '" stroke-width="1.6"/>' +
+             '<path d="M80 90 L86 96 L80 102 L74 96 Z" fill="' + gold + '"/>' + '<path d="M80 90 L86 96 L80 102 L74 96 Z" fill="#fff8e1" opacity="0.6" transform="translate(-1 -1)"/>' +
+             '<circle cx="80" cy="96" r="9" fill="none" stroke="' + gold + '" stroke-width="1" opacity="0.7"/>' +
+             '<path d="M62 84 Q56 80 55 74 M120 84 Q126 80 127 74 M58 96 Q50 96 50 104 M122 96 Q130 96 130 104" stroke="' + gold + '" stroke-width="1.6" stroke-linecap="round" fill="none"/>';
+    case 'titan': // большой золотой родовой знак: цельный щит с крестом и короне поверх
+      return '<path d="M80 80 L94 88 L94 102 L80 112 L66 102 L66 88 Z" fill="' + f + '" stroke="' + gold + '" stroke-width="2"/>' +
+             '<path d="M80 84 L91 90 L91 100 L80 108 L69 100 L69 90 Z" fill="' + d + '"/>' +
+             '<path d="M80 86 L80 106 M73 92 L87 104 M87 92 L73 104" stroke="' + gold + '" stroke-width="2" stroke-linecap="round"/>' +
+             '<circle cx="80" cy="96" r="6" fill="#fff8e1" opacity="0.5"/>';
+    default: // occupy — простая стальная пряжка на поясе
+      return '<rect x="76" y="90" width="8" height="12" rx="1" fill="' + d + '" stroke="#9e9e9e" stroke-width="1"/>' +
+             '<rect x="78" y="94" width="4" height="4" rx="1" fill="#e0e0e0"/>' +
+             '<path d="M72 94 L68 94 M88 94 L92 94" stroke="' + d + '" stroke-width="1.5" stroke-linecap="round"/>';
   }
 }
 
@@ -1308,29 +1314,54 @@ function renderFighterSVG(armour, gender, rarity) {
   const g = (gender === 'f') ? 'f' : 'm';
   const skin = '#e8b98a', hair = g === 'f' ? '#5d4037' : '#37474f';
   const gold = '#fbc02d';
+  const high = (rarity === 'legend' || rarity === 'titan');
   const tier = armorTierDetails(rarity, f, d);
   // цвет свечения клинков: огонь (оранжевый) слева, свет (сине-зелёный) справа
-  const flame = '#ff7043', light = 'rgba(0,229,255,0.9)';
+  const flame = '#ff7043', light = 'rgba(0,229,255,0.95)';
   const svg = '<svg viewBox="0 0 160 210" width="150" height="196" xmlns="http://www.w3.org/2000/svg">' +
-    // заднее свечение (энергия) для высоких качеств
-    (rarity === 'legend' || rarity === 'titan'
-      ? '<ellipse cx="80" cy="105" rx="58" ry="70" fill="' + gold + '" opacity="0.07"/>' : '') +
+    '<defs>' +
+    '<filter id="glowOrange" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"/></filter>' +
+    '<filter id="glowCyan" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"/></filter>' +
+    '<radialGradient id="metalGrad" cx="0.35" cy="0.25" r="0.9">' +
+      '<stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>' +
+      '<stop offset="0.35" stop-color="' + f + '" stop-opacity="0.9"/>' +
+      '<stop offset="1" stop-color="' + d + '"/>' +
+    '</radialGradient>' +
+    '<linearGradient id="flameGrad" x1="0" y1="1" x2="0" y2="0">' +
+      '<stop offset="0" stop-color="#fff176"/><stop offset="0.5" stop-color="#ff7043"/><stop offset="1" stop-color="#d32f2f"/>' +
+    '</linearGradient>' +
+    '<linearGradient id="lightGrad" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#e0faff"/><stop offset="0.5" stop-color="#00e5ff"/><stop offset="1" stop-color="#0277bd"/>' +
+    '</linearGradient>' +
+    '</defs>' +
+    // заднее свечение и плащ для высоких качеств
+    (high ? '<ellipse cx="80" cy="110" rx="60" ry="75" fill="' + gold + '" opacity="0.08"/>' : '') +
+    (high
+      ? '<path d="M62 96 Q40 140 26 200 L58 200 Q66 150 74 130 Z" fill="' + d + '" stroke="' + gold + '" stroke-width="1.2"/>' +
+        '<path d="M98 96 Q120 140 134 200 L102 200 Q94 150 86 130 Z" fill="' + d + '" stroke="' + gold + '" stroke-width="1.2"/>' +
+        '<path d="M70 100 Q60 132 44 196 L58 196 Q64 120 76 108 Z" fill="' + f + '" opacity="0.9"/>' +
+        '<path d="M90 100 Q100 132 116 196 L102 196 Q96 120 84 108 Z" fill="' + f + '" opacity="0.9"/>' +
+        '<path d="M68 120 Q60 150 50 180 M92 120 Q100 150 110 180" stroke="' + gold + '" stroke-width="1" opacity="0.5" fill="none"/>' +
+        '<path d="M60 96 Q44 140 32 198 M100 96 Q116 140 128 198" stroke="' + gold + '" stroke-width="1.6" opacity="0.45" fill="none"/>'
+      : '') +
     // тень
     '<ellipse cx="80" cy="198" rx="45" ry="8" fill="rgba(0,0,0,0.4)"/>' +
-    // сапоги (броня)
-    '<rect x="62" y="178" width="16" height="18" rx="5" fill="' + d + '"/>' +
-    '<rect x="82" y="178" width="16" height="18" rx="5" fill="' + d + '"/>' +
+    // сапоги (броня с бликом)
+    '<rect x="62" y="178" width="16" height="18" rx="5" fill="url(#metalGrad)"/>' +
+    '<rect x="82" y="178" width="16" height="18" rx="5" fill="url(#metalGrad)"/>' +
+    '<path d="M64 184 h12 M84 184 h12" stroke="#ffffff" opacity="0.3"/>' +
     // ноги (тёмные штаны)
     '<rect x="64" y="140" width="14" height="42" rx="6" fill="#263238"/>' +
     '<rect x="82" y="140" width="14" height="42" rx="6" fill="#263238"/>' +
-    // набедренники (пластины по бокам ног)
-    '<rect x="58" y="138" width="8" height="40" rx="4" fill="' + f + '"/>' +
-    '<rect x="94" y="138" width="8" height="40" rx="4" fill="' + f + '"/>' +
-    // торс — нагрудник с пластинами
-    '<path d="M62 74 L50 100 Q48 136 68 146 L92 146 Q112 136 110 100 L98 74 Z" fill="' + f + '"/>' +
-    '<path d="M62 74 L50 100 L110 100 L98 74 Z" fill="' + d + '" opacity="0.5"/>' +
+    // набедренники
+    '<rect x="58" y="138" width="8" height="40" rx="4" fill="url(#metalGrad)"/>' +
+    '<rect x="94" y="138" width="8" height="40" rx="4" fill="url(#metalGrad)"/>' +
+    // торс — нагрудник с пластинами и бликом
+    '<path d="M62 74 L50 100 Q48 136 68 146 L92 146 Q112 136 110 100 L98 74 Z" fill="url(#metalGrad)"/>' +
+    '<path d="M62 74 L50 100 L110 100 L98 74 Z" fill="' + d + '" opacity="0.45"/>' +
     '<rect x="62" y="92" width="36" height="4" rx="2" fill="' + d + '" opacity="0.6"/>' +
     '<rect x="66" y="112" width="28" height="4" rx="2" fill="' + d + '" opacity="0.6"/>' +
+    '<path d="M66 80 Q70 92 64 110 M94 80 Q90 92 96 110" stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.35"/>' +
     // детали качества брони на груди
     tier +
     // пояс
@@ -1342,38 +1373,49 @@ function renderFighterSVG(armour, gender, rarity) {
     // перчатки
     '<circle cx="48" cy="126" r="7" fill="' + d + '"/>' +
     '<circle cx="112" cy="126" r="7" fill="' + d + '"/>' +
-    // наплечники
+    // наплечники с бликом
     '<path d="M36 72 Q36 56 52 58 L62 70 Q52 78 44 78 Z" fill="' + d + '"/>' +
     '<path d="M124 72 Q124 56 108 58 L98 70 Q108 78 116 78 Z" fill="' + d + '"/>' +
-    '<circle cx="44" cy="70" r="9" fill="' + f + '"/>' +
-    '<circle cx="116" cy="70" r="9" fill="' + f + '"/>' +
+    '<circle cx="44" cy="70" r="9" fill="url(#metalGrad)"/>' +
+    '<circle cx="116" cy="70" r="9" fill="url(#metalGrad)"/>' +
+    '<circle cx="42" cy="67" r="3" fill="#ffffff" opacity="0.5"/><circle cx="114" cy="67" r="3" fill="#ffffff" opacity="0.5"/>' +
     // шея
     '<rect x="73" y="46" width="14" height="14" rx="4" fill="' + skin + '"/>' +
-    // лицо
+    // лицо с лёгкой тенью
     '<circle cx="80" cy="44" r="20" fill="' + skin + '"/>' +
-    // глаза
-    '<circle cx="73" cy="42" r="3" fill="#212121"/><circle cx="87" cy="42" r="3" fill="#212121"/>' +
+    '<path d="M60 44 Q60 62 80 62 Q100 62 100 44 Q100 60 92 54 Q80 58 68 54 Q60 60 60 44 Z" fill="rgba(120,60,20,0.18)"/>' +
+    // глаза (зрачки+блик)
+    '<circle cx="73" cy="42" r="3.5" fill="#ffffff"/><circle cx="73" cy="42" r="2.2" fill="#212121"/><circle cx="72" cy="41" r="0.8" fill="#ffffff"/>' +
+    '<circle cx="87" cy="42" r="3.5" fill="#ffffff"/><circle cx="87" cy="42" r="2.2" fill="#212121"/><circle cx="86" cy="41" r="0.8" fill="#ffffff"/>' +
     // брови
-    '<path d="M68 34 L77 36 M92 34 L83 36" stroke="#212121" stroke-width="2" stroke-linecap="round" fill="none"/>' +
-    // рот
-    '<path d="M75 51 L85 49" stroke="#b1531f" stroke-width="2" stroke-linecap="round"/>' +
+    '<path d="M67 34 L78 36 M93 34 L82 36" stroke="#212121" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
+    // нос, румянец и рот
+    '<path d="M80 44 L80 48" stroke="#b1531f" stroke-width="1.4" stroke-linecap="round"/>' +
+    '<circle cx="70" cy="50" r="2.5" fill="rgba(230,120,80,0.35)"/><circle cx="90" cy="50" r="2.5" fill="rgba(230,120,80,0.35)"/>' +
+    '<path d="M75 52 Q80 54 85 51" stroke="#b1531f" stroke-width="1.8" stroke-linecap="round" fill="none"/>' +
     // причёска (по полу)
     (g === 'f'
-      ? '<path d="M60 44 Q58 18 80 16 Q102 18 100 44 Q100 30 88 28 Q80 34 72 30 Q60 32 60 44 Z" fill="' + hair + '"/>' +
-        '<path d="M72 40 Q64 70 56 82 L66 84 Q74 62 76 42 Z" fill="' + hair + '"/>'
-      : '<path d="M60 38 Q60 18 80 18 Q100 18 100 38 Q100 24 88 24 Q80 28 72 24 Q60 26 60 38 Z" fill="' + hair + '"/>') +
-    // золотая корона-шлем (как у воительницы с экрана)
-    '<path d="M58 30 Q58 8 80 6 Q102 8 102 30 L94 22 Q80 13 66 22 Z" fill="' + gold + '"/>' +
-    '<path d="M80 2 L85 12 L80 20 L75 12 Z" fill="' + gold + '"/>' +
-    '<path d="M66 8 L72 16 M94 8 L88 16" stroke="' + gold + '" stroke-width="2.5" stroke-linecap="round" fill="none"/>' +
-    // светящиеся клинки: огонь (слева) и свет (справа)
-    '<path d="M44 120 L50 120 L47 34 Z" fill="' + flame + '" opacity="0.9"/>' +
-    '<g filter="url(#glowF)"><path d="M44 120 L50 120 L47 34 Z" fill="' + flame + '" opacity="0.85"/></g>' +
-    '<rect x="40" y="118" width="14" height="6" rx="2" fill="' + d + '"/>' +
-    '<rect x="114" y="40" width="6" height="78" rx="2" fill="' + light + '"/>' +
-    '<path d="M112 32 L122 32 L117 14 Z" fill="' + light + '"/>' +
-    '<rect x="110" y="46" width="14" height="6" rx="2" fill="' + d + '"/>' +
-    '<defs><filter id="glowF"><feGaussianBlur stdDeviation="2.5"/></filter></defs>' +
+      ? '<path d="M58 44 Q56 16 80 14 Q104 16 102 44 Q102 28 90 27 Q80 33 70 29 Q58 32 58 44 Z" fill="' + hair + '"/>' +
+        '<path d="M70 42 Q60 72 52 86 L63 88 Q72 64 74 42 Z" fill="' + hair + '"/>' +
+        '<path d="M90 42 Q98 68 106 82 L96 86 Q88 64 86 44 Z" fill="' + hair + '"/>'
+      : '<path d="M58 38 Q58 16 80 16 Q102 16 102 38 Q102 24 88 23 Q80 28 72 24 Q58 27 58 38 Z" fill="' + hair + '"/>') +
+    // золотая корона-шлем (у воительницы — с центральным самоцветом)
+    '<path d="M56 30 Q54 6 80 4 Q106 6 104 30 L94 22 Q80 12 66 22 Z" fill="' + gold + '"/>' +
+    '<path d="M56 30 Q54 6 80 4 Q106 6 104 30 L94 24 Q80 14 66 24 Z" fill="#ffe082" opacity="0.5"/>' +
+    '<circle cx="80" cy="14" r="4" fill="#e53935"/><circle cx="80" cy="14" r="4" fill="none" stroke="#fff59d" stroke-width="1"/>' +
+    '<path d="M66 10 L72 18 M94 10 L88 18" stroke="' + gold + '" stroke-width="2.5" stroke-linecap="round" fill="none"/>' +
+    // огненный клинок слева (с градиентом и свечением)
+    '<g filter="url(#glowOrange)"><path d="M45 118 L51 118 L48 28 Z" fill="' + flame + '"/></g>' +
+    '<path d="M45 118 L51 118 L48 28 Z" fill="url(#flameGrad)"/>' +
+    '<path d="M48 34 L47 60 L46 34 Z" fill="#fff59d" opacity="0.7"/>' +
+    '<rect x="40" y="116" width="16" height="6" rx="2" fill="' + d + '"/>' +
+    // светящийся клинок справа (с градиентом и свечением)
+    '<g filter="url(#glowCyan)"><path d="M113 40 L119 40 L116 12 Z" fill="' + light + '"/></g>' +
+    '<path d="M113 40 L119 40 L116 12 Z" fill="url(#lightGrad)"/>' +
+    '<rect x="110" y="40" width="6" height="76" rx="2" fill="url(#lightGrad)"/>' +
+    '<rect x="108" y="46" width="10" height="26" rx="1.5" fill="#ffffff" opacity="0.6"/>' +
+    '<rect x="108" y="48" width="6" height="30" rx="1.5" fill="#e0faff" opacity="0.8"/>' +
+    '<rect x="106" y="44" width="14" height="6" rx="2" fill="' + d + '"/>' +
     '</svg>';
   return svg;
 }
